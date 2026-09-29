@@ -479,6 +479,8 @@ const CAL_ICON = `<svg class="calico" viewBox="0 0 16 16" fill="none" stroke="cu
 const ARCH_ICON = `<svg class="btnico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"/><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"/></svg>`;
 // Simple flat folder outline for Source Files
 const FOLDER_ICON = `<svg class="lico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M1.75 4.25a1 1 0 0 1 1-1h3.1l1.4 1.5h5.999a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1H2.75a1 1 0 0 1-1-1z"/></svg>`;
+// Hollow play triangle for Live Post
+const PLAY_ICON = `<svg class="lico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.75v10.5a.5.5 0 0 0 .76.43l8.4-5.25a.5.5 0 0 0 0-.86l-8.4-5.25a.5.5 0 0 0-.76.43z"/></svg>`;
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -509,7 +511,7 @@ function safeUrl(u){ try{ const x=new URL(String(u||"").trim()); return (x.proto
 function linkChips(c){
   const post=safeUrl(c.postUrl), files=safeUrl(c.filesUrl);
   if(!post&&!files) return "";
-  return `<div class="links">${post?`<a class="lchip post" href="${esc(post)}" target="_blank" rel="noopener noreferrer">▶ Live Post</a>`:""}${files?`<a class="lchip files" href="${esc(files)}" target="_blank" rel="noopener noreferrer">${FOLDER_ICON}Source Files</a>`:""}</div>`;
+  return `<div class="links">${post?`<a class="lchip post" href="${esc(post)}" target="_blank" rel="noopener noreferrer">${PLAY_ICON}Live Post</a>`:""}${files?`<a class="lchip files" href="${esc(files)}" target="_blank" rel="noopener noreferrer">${FOLDER_ICON}Source Files</a>`:""}</div>`;
 }
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
 function setSync(on,text){ const s=$("#sync"); s.classList.toggle("on",on); s.querySelector("span").textContent=text; }
@@ -536,7 +538,7 @@ function miniCard(c,k){
   return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
     <span class="miniico">${icon(c.channel)}</span>
     <span class="minitxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></span>
-    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Live Post" aria-label="Open live post">▶</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
+    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
   </div>`;
 }
 function renderBoard(){
