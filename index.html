@@ -336,6 +336,61 @@ td .links{margin-top:0;flex-wrap:nowrap}
 .searchnote{margin-top:14px;font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .searchnote b{color:var(--ink)}
 @media (max-width:760px){.barright{width:100%;justify-content:flex-start}.search{width:100%}}
+
+/* influencer directory */
+.infhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px}
+.infhead .muted{margin:0;color:var(--ink-3);font-size:13px}
+.infgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.infcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.infcard:hover{border-color:var(--ink-3);box-shadow:var(--shadow)}
+.infcard:focus-visible{outline:2px solid var(--action,#4F0CE8);outline-offset:2px}
+.inftop{display:flex;gap:12px;align-items:center}
+.av.lg{width:40px;height:40px;font-size:14px}
+.infname{display:flex;flex-direction:column;min-width:0}
+.infname b{font:800 15px Nunito,"Open Sans",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.infname>span{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pets{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.pet{display:inline-flex;align-items:center;gap:5px;font:700 11.5px/1 Nunito,"Open Sans",sans-serif;padding:5px 9px;border-radius:999px;background:#FDF0E6;color:#B24F0B}
+.pet .lico{width:11px;height:11px}
+.petprev .pets{margin-top:-6px}
+.infmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);border-top:1px dashed var(--line);padding-top:9px;margin-top:12px}
+.livenow{color:var(--live);font-weight:700}
+.whoh{font:500 12px "Open Sans",sans-serif;color:var(--ink-3);margin-left:4px}
+.hist{border-top:1px solid var(--line);padding-top:14px}
+.histh{margin:0 0 8px;font:800 13px Nunito,"Open Sans",sans-serif}
+.histh .muted{color:var(--ink-3);font-weight:600}
+.histrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 2px}
+.histrow:hover{background:var(--surface-2)}
+.histrow .ico{width:16px;height:16px}
+.histtxt{display:flex;flex-direction:column;flex:1;min-width:0}
+.histtxt b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.histtxt span{font-size:11.5px;color:var(--ink-3)}
+.histst.arch{font-size:11.5px;font-weight:700;color:var(--ink-3);background:var(--surface-2);padding:3px 8px;border-radius:999px}
+/* influencer picker */
+.combo{position:relative}
+.combobtn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 11px;min-height:40px;text-align:left;font-weight:500;color:var(--ink)}
+.combobtn:disabled{cursor:default;opacity:.85}
+.combobtn>span{display:flex;align-items:center;gap:8px;min-width:0}
+.combobtn .ph{color:var(--ink-3)}
+.combobtn svg{color:var(--ink-3);flex:none}
+.pickname{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pickh{color:var(--ink-3);font-size:12.5px;white-space:nowrap}
+.combopanel{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(20,20,20,.14);z-index:12;padding:8px}
+.combopanel input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:6px;outline:none}
+.combopanel input:focus{border-color:var(--action,#4F0CE8)}
+.combolist{max-height:260px;overflow:auto;display:grid;gap:2px}
+.opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px}
+.opt:hover,.opt:focus{background:var(--surface-2);outline:none}
+.opt.sel{background:color-mix(in srgb,var(--action,#4F0CE8) 8%,var(--surface))}
+.opttxt{display:flex;flex-direction:column;min-width:0;flex:1}
+.opttxt b{font-size:13.5px}
+.opttxt span{font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.optcheck{color:var(--action,#4F0CE8);font-weight:800}
+.optempty{padding:14px 8px;text-align:center;font-size:13px;color:var(--ink-3);line-height:1.8}
+
+#infLbl{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+div.f:has(#infCombo){display:grid;gap:6px}
+.combopanel input::-webkit-search-cancel-button{display:none}
 </style>
 </head>
 <body>
@@ -412,6 +467,8 @@ td .links{margin-top:0;flex-wrap:nowrap}
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="2"/><path d="M1.5 6.5h13M5 1v3M11 1v3"/></svg>Calendar</button>
       <button class="tab" role="tab" data-view="table" aria-selected="false">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 6h13M1.5 9.75h13M6 2.5v11"/></svg>Table</button>
+      <button class="tab" role="tab" data-view="influencers" aria-selected="false">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="1.75" width="10.5" height="12.5" rx="1.5"/><circle cx="8.25" cy="6.5" r="1.9"/><path d="M5.25 11.5c.5-1.5 1.6-2.3 3-2.3s2.5.8 3 2.3M1.75 4.5h2.5M1.75 8h2.5M1.75 11.5h2.5"/></svg>Influencers<span class="tabcount" id="infCount"></span></button>
       <button class="tab" role="tab" data-view="archive" aria-selected="false">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"/><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"/></svg>Archive<span class="tabcount" id="archCount"></span></button>
       <button class="tab" role="tab" data-view="team" aria-selected="false" id="teamTab" hidden>
@@ -437,7 +494,15 @@ td .links{margin-top:0;flex-wrap:nowrap}
 <aside class="drawer" id="drawer" aria-hidden="true">
   <div class="dhead"><h3 id="dTitle">New campaign</h3><button class="btn iconbtn" id="dClose" aria-label="Close">✕</button></div>
   <div class="dbody">
-    <label class="f">Influencer<input id="fInf" placeholder="e.g. Maya Chen"></label>
+    <div class="f"><span id="infLbl">Influencer</span>
+      <div class="combo" id="infCombo">
+        <button type="button" class="combobtn" id="infBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="infLbl infBtnLabel"><span id="infBtnLabel"></span><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+        <div class="combopanel" id="infPanel" hidden>
+          <input id="infSearch" type="search" placeholder="Search name, handle or pet…" autocomplete="off" aria-label="Search influencers">
+          <div class="combolist" id="infList" role="listbox" aria-labelledby="infLbl"></div>
+        </div>
+      </div>
+    </div>
     <label class="f">Asset<input id="fAsset" placeholder="e.g. Fall recipe reel"></label>
     <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Channel<div class="pickers" id="fChan"></div></div>
     <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Status<div class="pickers" id="fStat"></div></div>
@@ -456,6 +521,22 @@ td .links{margin-top:0;flex-wrap:nowrap}
   <div class="dfoot">
     <div style="display:flex;gap:8px"><button class="btn" id="dArchive">Archive</button><button class="btn danger" id="dDelete"><svg class="btnico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5h11M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.6a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9l.7-8.6M6.8 7v4.5M9.2 7v4.5"/></svg>Delete</button></div>
     <div style="display:flex;gap:8px"><button class="btn" id="dCancel">Cancel</button><button class="btn primary" id="dSave">Save</button></div>
+  </div>
+</aside>
+<aside class="drawer" id="idrawer" aria-hidden="true">
+  <div class="dhead"><h3 id="iTitle">New influencer</h3><button class="btn iconbtn" id="iClose" aria-label="Close">✕</button></div>
+  <div class="dbody">
+    <label class="f">Name<input id="iName" placeholder="Maya Chen" autocomplete="off"></label>
+    <label class="f">Handle<input id="iHandle" placeholder="@mayacooks" autocomplete="off"></label>
+    <label class="f"><span>Pet name(s) <span class="hintlbl">· separate with commas</span></span><input id="iPets" placeholder="Luna, Biscuit" autocomplete="off"></label>
+    <div class="petprev" id="iPetPrev"></div>
+    <div class="edited" id="iEdited"></div>
+    <div id="iHistory"></div>
+    <div class="err" id="iErr"></div>
+  </div>
+  <div class="dfoot">
+    <button class="btn danger" id="iDelete"></button>
+    <div style="display:flex;gap:8px"><button class="btn" id="iCancel">Cancel</button><button class="btn primary" id="iSave">Save</button></div>
   </div>
 </aside>
 <div class="toast" id="toast"></div>
@@ -486,6 +567,8 @@ let campaigns = [];
 let view = "board", chanFilter = new Set();
 let calMonth = (()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1)})();
 let editing = null, draft = {}, channelSub = null;
+let influencers = {};      // id -> {id,name,handle,pets,...}
+let editingInf = null;
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -511,6 +594,9 @@ const ARCH_ICON = `<svg class="btnico" viewBox="0 0 16 16" fill="none" stroke="c
 const FOLDER_ICON = `<svg class="lico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M1.75 4.25a1 1 0 0 1 1-1h3.1l1.4 1.5h5.999a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1H2.75a1 1 0 0 1-1-1z"/></svg>`;
 // Hollow play triangle for Live Post
 const PLAY_ICON = `<svg class="lico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.75v10.5a.5.5 0 0 0 .76.43l8.4-5.25a.5.5 0 0 0 0-.86l-8.4-5.25a.5.5 0 0 0-.76.43z"/></svg>`;
+const PAW_ICON = `<svg class="lico" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><ellipse cx="4" cy="6.2" rx="1.45" ry="1.85"/><ellipse cx="7" cy="4.2" rx="1.45" ry="1.9"/><ellipse cx="10.4" cy="4.4" rx="1.45" ry="1.9"/><ellipse cx="13" cy="6.9" rx="1.35" ry="1.75"/><path d="M8.3 7.9c1.9 0 4.1 2.6 4.1 4.3 0 1.2-1 1.7-2 1.5-.8-.1-1.3-.5-2.1-.5s-1.4.4-2.2.5c-1 .2-2-.3-2-1.5 0-1.7 2.3-4.3 4.2-4.3z"/></svg>`;
+const infHandle = h => { h=String(h||"").trim(); return !h ? "" : (h.startsWith("@")||/^https?:/i.test(h) ? h : "@"+h); };
+const TRASH_ICON = '<svg class="btnico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5h11M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.6a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9l.7-8.6M6.8 7v4.5M9.2 7v4.5"/></svg>';
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -548,9 +634,15 @@ function setSync(on,text){ const s=$("#sync"); s.classList.toggle("on",on); s.qu
 let query="";
 const norm = t => String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 // Every word typed must appear somewhere in the campaign (influencer, asset, notes, channel, status, creator)
+function infMatches(i){
+  if(!query) return true;
+  const hay=norm([i.name,i.handle,(i.pets||[]).join(" ")].join(" "));
+  return norm(query).split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
+}
 function matchesQuery(c){
   if(!query) return true;
-  const hay=norm([c.influencer,c.asset,c.notes,c.channel,c.status,nameOf(c.createdBy),nameOf(c.updatedBy)].join(" "));
+  const inf=influencers[c.influencerId]||{};
+  const hay=norm([c.influencer,inf.handle,(inf.pets||[]).join(" "),c.asset,c.notes,c.channel,c.status,nameOf(c.createdBy),nameOf(c.updatedBy)].join(" "));
   return norm(query).split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
 }
 const byChan = c => (!chanFilter.size || chanFilter.has(c.channel)) && matchesQuery(c);
@@ -558,12 +650,12 @@ function visible(){ return campaigns.filter(c => !c.archivedAt && byChan(c)); } 
 function archivedList(){ return campaigns.filter(c => c.archivedAt && byChan(c)).sort((a,b)=>new Date(b.archivedAt)-new Date(a.archivedAt)); }
 
 /* ---------- mapping between database rows and the page ---------- */
-const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,postUrl:r.post_url||"",filesUrl:r.files_url||"",createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at,archivedAt:r.archived_at||null,archivedBy:r.archived_by||null});
-const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||"",post_url:c.postUrl||null,files_url:c.filesUrl||null});
+const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,postUrl:r.post_url||"",filesUrl:r.files_url||"",createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at,archivedAt:r.archived_at||null,archivedBy:r.archived_by||null,influencerId:r.influencer_id||null});
+const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||"",post_url:c.postUrl||null,files_url:c.filesUrl||null,influencer_id:c.influencerId||null});
 
 /* ---------- filters ---------- */
 function renderFilters(){
-  if(view==="team"){ $("#filters").innerHTML=""; return; }
+  if(view==="team"||view==="influencers"){ $("#filters").innerHTML=""; return; }
   const used=new Set(campaigns.map(c=>c.channel));
   $("#filters").innerHTML=Object.keys(CHANNELS).filter(k=>used.has(k)).map(k=>`<button class="chipf" data-ch="${esc(k)}" aria-pressed="${chanFilter.has(k)}">${icon(k)}${esc(k)}</button>`).join("");
 }
@@ -598,7 +690,7 @@ function renderBoard(){
       <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><span class="viewtoggle" role="group" aria-label="${esc(s)} card size"><button type="button" data-compact="${esc(s)}" data-mode="full" aria-pressed="${!compactCols.has(s)}" title="Expanded cards">${ICON_EXPAND}</button><button type="button" data-compact="${esc(s)}" data-mode="mini" aria-pressed="${compactCols.has(s)}" title="Compact cards">${ICON_COMPACT}</button></span></span></div>
       ${col.map(c=>{const k=ch(c.channel); if(compactCols.has(s)) return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
         ${tag(c.channel)}
-        <div class="who">${esc(c.influencer||"Untitled")}</div>
+        <div class="who">${esc(c.influencer||"Untitled")}${influencers[c.influencerId]&&influencers[c.influencerId].handle?` <span class="whoh">${esc(infHandle(influencers[c.influencerId].handle))}</span>`:""}</div>
         <div class="what">${esc(c.asset||"")}</div>
         <div class="when">${CAL_ICON}<span>${fmtRange(c.start,c.end)}</span></div>
         ${linkChips(c)}
@@ -708,6 +800,105 @@ function renderTable(){
 }
 function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
 
+/* ---------- influencer directory ---------- */
+function infCampaigns(id){ return campaigns.filter(c=>c.influencerId===id).sort((a,b)=>(b.start||"").localeCompare(a.start||"")); }
+function petChips(pets){ return (pets||[]).length?`<div class="pets">${pets.map(p=>`<span class="pet">${PAW_ICON}${esc(p)}</span>`).join("")}</div>`:""; }
+function renderInfluencers(){
+  const list=Object.values(influencers).filter(infMatches).sort((a,b)=>a.name.localeCompare(b.name));
+  const head=`<div class="infhead"><p class="muted">${Object.keys(influencers).length} influencer${Object.keys(influencers).length===1?"":"s"} in your directory</p>${canWrite()?`<button class="btn primary" id="addInf">＋ Add influencer</button>`:""}</div>`;
+  if(!Object.keys(influencers).length) return head+`<div class="empty">Your directory is empty.<br><span class="muted">Add an influencer here, then pick them when you create a campaign.</span></div>`;
+  if(!list.length) return head+`<div class="empty">No influencers match “${esc(query)}”.</div>`;
+  return head+`<div class="infgrid">${list.map(i=>{
+    const cs=infCampaigns(i.id), live=cs.some(c=>c.status==="Live"&&!c.archivedAt);
+    return `<div class="infcard" role="button" tabindex="0" data-inf="${esc(i.id)}">
+      <div class="inftop"><span class="av lg" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><div class="infname"><b>${esc(i.name)}</b><span>${esc(infHandle(i.handle))||'<span class="muted">No handle yet</span>'}</span></div></div>
+      ${petChips(i.pets)}
+      <div class="infmeta"><span>${cs.length} campaign${cs.length===1?"":"s"}</span>${live?'<span class="livenow">● Live now</span>':cs[0]&&cs[0].start?`<span>Last: ${fmtSide(cs[0].start)}</span>`:""}</div>
+    </div>`;}).join("")}</div>`;
+}
+function wireInfluencers(){
+  const b=$("#addInf"); if(b) b.onclick=()=>openInfDrawer(null);
+  document.querySelectorAll(".infcard").forEach(el=>{
+    const open=()=>openInfDrawer(influencers[el.dataset.inf]);
+    el.addEventListener("click",open); el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
+  });
+}
+const parsePets = t => [...new Set(String(t||"").split(",").map(x=>x.trim()).filter(Boolean))].slice(0,20);
+function syncPetPreview(){ $("#iPetPrev").innerHTML=petChips(parsePets($("#iPets").value)); }
+$("#iPets").addEventListener("input",syncPetPreview);
+function openInfDrawer(inf){
+  editingInf=inf||null; const ro=!canWrite();
+  $("#iTitle").textContent=inf?(ro?inf.name:"Edit influencer"):"New influencer";
+  $("#iName").value=inf?inf.name:""; $("#iHandle").value=inf?inf.handle:""; $("#iPets").value=inf?(inf.pets||[]).join(", "):"";
+  syncPetPreview();
+  ["#iName","#iHandle","#iPets"].forEach(x=>$(x).disabled=ro);
+  $("#iSave").hidden=ro; $("#iCancel").textContent=ro?"Close":"Cancel";
+  $("#iDelete").hidden=!(inf&&canDelete()); $("#iDelete").innerHTML=`${TRASH_ICON}Delete`;
+  $("#iEdited").innerHTML=inf?`<div class="stamps big">${stamp("Added",inf.createdBy,inf.createdAt)}${stamp("Last edited",inf.updatedBy,inf.updatedAt)}</div>`:"";
+  const cs=inf?infCampaigns(inf.id):[];
+  $("#iHistory").innerHTML=inf?`<div class="hist"><p class="histh">Campaign history <span class="muted">· ${cs.length}</span></p>${cs.length?cs.map(c=>`<button type="button" class="histrow" data-cid="${esc(c.id)}">${icon(c.channel)}<span class="histtxt"><b>${esc(c.asset||"Untitled")}</b><span>${fmtRange(c.start,c.end)}</span></span>${c.archivedAt?'<span class="histst arch">Archived</span>':stat(c.status)}</button>`).join(""):'<p class="muted" style="margin:6px 0 0;font-size:13px">No campaigns yet.</p>'}${inf&&canWrite()?`<button type="button" class="btn" id="iNewCamp" style="margin-top:10px">＋ New campaign with ${esc(inf.name.split(" ")[0])}</button>`:""}</div>`:"";
+  $("#iHistory").querySelectorAll("[data-cid]").forEach(b=>b.onclick=()=>{ const c=campaigns.find(x=>x.id===b.dataset.cid); closeDrawer(); setTimeout(()=>openDrawer(c),120); });
+  const nc=$("#iNewCamp"); if(nc) nc.onclick=()=>{ const id=inf.id; closeDrawer(); setTimeout(()=>openDrawer(null,{influencerId:id,influencer:inf.name}),120); };
+  $("#iErr").textContent="";
+  $("#idrawer").classList.add("open"); $("#scrim").classList.add("open"); $("#idrawer").setAttribute("aria-hidden","false");
+  if(!ro) setTimeout(()=>$("#iName").focus(),50);
+}
+$("#iClose").onclick=closeDrawer; $("#iCancel").onclick=closeDrawer;
+$("#iSave").onclick=async()=>{
+  if(!canWrite()) return;
+  const name=$("#iName").value.trim().replace(/\s+/g," "), handle=$("#iHandle").value.trim(), pets=parsePets($("#iPets").value);
+  if(!name){ $("#iErr").textContent="Add a name to save."; return; }
+  const dupe=Object.values(influencers).find(i=>i.name.toLowerCase()===name.toLowerCase()&&(!editingInf||i.id!==editingInf.id));
+  if(dupe){ $("#iErr").textContent=`${dupe.name} is already in the directory.`; return; }
+  const row={name,handle,pet_names:pets};
+  const q=editingInf?sb.from("influencers").update(row).eq("id",editingInf.id).select():sb.from("influencers").insert(row).select();
+  const {data,error}=await q;
+  if(error||!data||!data.length){ $("#iErr").textContent=error?(error.code==="23505"?"That name is already in the directory.":"Couldn't save: "+error.message):"You don't have permission to change this."; return; }
+  await loadInfluencers(); render(); closeDrawer(); toast(editingInf?"Influencer saved":"Influencer added");
+};
+$("#iDelete").onclick=async()=>{
+  if(!editingInf||!canDelete()) return;
+  const n=infCampaigns(editingInf.id).length;
+  if(!confirm(`Delete ${editingInf.name} from the directory?${n?`\n\nTheir ${n} campaign${n===1?"":"s"} will stay, but won't be linked to a profile.`:""}`)) return;
+  const {data,error}=await sb.from("influencers").delete().eq("id",editingInf.id).select();
+  if(error||!data||!data.length){ $("#iErr").textContent=error?"Couldn't delete: "+error.message:"Only admins can delete influencers."; return; }
+  await Promise.all([loadInfluencers(),loadCampaigns()]); render(); closeDrawer(); toast("Influencer deleted");
+};
+
+/* ---------- influencer picker (campaign form) ---------- */
+function setInfPick(id,fallbackName){
+  draft.influencerId=id&&influencers[id]?id:null;
+  const i=influencers[draft.influencerId], lbl=$("#infBtnLabel");
+  if(i){ lbl.innerHTML=`<span class="av sm" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><span class="pickname">${esc(i.name)}</span>${i.handle?`<span class="pickh">${esc(infHandle(i.handle))}</span>`:""}`; lbl.className=""; }
+  else { lbl.textContent=fallbackName?`${fallbackName} (not in directory)`:"Choose an influencer"; lbl.className="ph"; }
+}
+function renderInfList(){
+  const q=norm($("#infSearch").value.trim());
+  const all=Object.values(influencers).sort((a,b)=>a.name.localeCompare(b.name));
+  const list=all.filter(i=>!q||q.split(/\s+/).every(w=>norm([i.name,i.handle,(i.pets||[]).join(" ")].join(" ")).includes(w)));
+  $("#infList").innerHTML=list.length?list.map((i,n)=>`<button type="button" class="opt ${i.id===draft.influencerId?"sel":""}" role="option" aria-selected="${i.id===draft.influencerId}" data-pick="${esc(i.id)}"><span class="av sm" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><span class="opttxt"><b>${esc(i.name)}</b><span>${esc(infHandle(i.handle))}${i.pets&&i.pets.length?` · ${esc(i.pets.join(", "))}`:""}</span></span>${i.id===draft.influencerId?'<span class="optcheck">✓</span>':""}</button>`).join("")
+    : `<div class="optempty">${all.length?`No influencer matches “${esc($("#infSearch").value.trim())}”.`:"No influencers in the directory yet."}<br><button type="button" class="linkbtn" id="goDirectory">Add them in the Influencers tab</button></div>`;
+  const g=$("#goDirectory"); if(g) g.onclick=()=>{ closeDrawer(); view="influencers"; render(); if(canWrite()) setTimeout(()=>openInfDrawer(null),150); };
+}
+function openInfPanel(){ $("#infPanel").hidden=false; $("#infBtn").setAttribute("aria-expanded","true"); $("#infSearch").value=""; renderInfList(); setTimeout(()=>$("#infSearch").focus(),0); }
+function closeInfPanel(){ $("#infPanel").hidden=true; $("#infBtn").setAttribute("aria-expanded","false"); }
+$("#infBtn").onclick=e=>{ e.stopPropagation(); if(!canWrite()) return; $("#infPanel").hidden?openInfPanel():closeInfPanel(); };
+$("#infSearch").addEventListener("input",renderInfList);
+$("#infSearch").addEventListener("keydown",e=>{
+  const opts=[...document.querySelectorAll("#infList .opt")];
+  if(e.key==="ArrowDown"&&opts[0]){ e.preventDefault(); opts[0].focus(); }
+  else if(e.key==="Enter"&&opts.length===1){ e.preventDefault(); opts[0].click(); }
+  else if(e.key==="Escape"){ e.stopPropagation(); closeInfPanel(); $("#infBtn").focus(); }
+});
+$("#infList").addEventListener("keydown",e=>{
+  const opts=[...document.querySelectorAll("#infList .opt")], i=opts.indexOf(document.activeElement);
+  if(e.key==="ArrowDown"&&i<opts.length-1){ e.preventDefault(); opts[i+1].focus(); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); (i>0?opts[i-1]:$("#infSearch")).focus(); }
+  else if(e.key==="Escape"){ e.stopPropagation(); closeInfPanel(); $("#infBtn").focus(); }
+});
+$("#infList").addEventListener("click",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return; setInfPick(b.dataset.pick); $("#fErr").textContent=""; closeInfPanel(); $("#infBtn").focus(); });
+document.addEventListener("click",e=>{ if(!e.target.closest("#infCombo")) closeInfPanel(); });
+
 /* ---------- archive ---------- */
 function renderArchive(){
   const items=archivedList();
@@ -764,7 +955,9 @@ function render(){
   const v=$("#view");
   const ac=campaigns.filter(c=>c.archivedAt).length; $("#archCount").textContent=ac?ac:"";
   if(view==="team"){v.innerHTML=renderTeam();wireTeam();return;}
+  const ic=Object.keys(influencers).length; $("#infCount").textContent=ic?ic:"";
   if(view==="archive"){v.innerHTML=renderArchive();wireArchive();return;}
+  if(view==="influencers"){v.innerHTML=renderInfluencers();wireInfluencers();return;}
   if(!campaigns.some(c=>!c.archivedAt)&&view!=="calendar"){v.innerHTML=`<div class="empty">${canWrite()?`No campaigns yet. Add your first one to see it on the board and calendar.<br><br><button class="btn primary" id="emptyNew">＋ New campaign</button>`:"No campaigns yet."}</div>`;const b=$("#emptyNew");if(b)b.onclick=()=>openDrawer(null);return;}
   if(view==="board"){v.innerHTML=renderBoard();wireBoard();}
   else if(view==="calendar"){v.innerHTML=renderCalendar();wireCalendar();}
@@ -794,7 +987,8 @@ function openDrawer(c,preset={}){
   editing=c||null; draft={channel:"Meta",status:"Not Started",...(c||{}),...preset};
   const ro=!canWrite();
   $("#dTitle").textContent=ro?"Campaign":(c?"Edit campaign":"New campaign");
-  $("#fInf").value=draft.influencer||"";$("#fAsset").value=draft.asset||"";
+  setInfPick(draft.influencerId||null, draft.influencer||""); closeInfPanel();
+  $("#fAsset").value=draft.asset||"";
   $("#fStart").value=draft.start||"";$("#fEnd").value=draft.end||"";$("#fNotes").value=draft.notes||"";
   $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
   document.querySelectorAll("#drawer input,#drawer textarea").forEach(el=>el.disabled=ro);
@@ -806,13 +1000,17 @@ function openDrawer(c,preset={}){
   $("#fEdited").innerHTML=c?`<div class="stamps big">${stamp("Created",c.createdBy,c.createdAt)}${stamp("Last edited",c.updatedBy,c.updatedAt)}</div>`:"";
   $("#fErr").textContent=""; pickers();
   $("#drawer").classList.add("open");$("#scrim").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");
-  if(!ro) setTimeout(()=>$("#fInf").focus(),50);
+  $("#infBtn").disabled=ro;
+  if(!ro) setTimeout(()=>$("#infBtn").focus(),50);
 }
 function syncOpenLinks(){
   [["#fPost","#fPostOpen"],["#fFiles","#fFilesOpen"]].forEach(([i,a])=>{ const u=safeUrl($(i).value); const el=$(a); el.hidden=!u; if(u) el.href=u; });
 }
 ["#fPost","#fFiles"].forEach(i=>$(i).addEventListener("input",syncOpenLinks));
-function closeDrawer(){$("#drawer").classList.remove("open");$("#scrim").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");}
+function closeDrawer(){
+  ["#drawer","#idrawer"].forEach(d=>{$(d).classList.remove("open");$(d).setAttribute("aria-hidden","true");});
+  $("#scrim").classList.remove("open"); closeInfPanel();
+}
 $("#dClose").onclick=closeDrawer;$("#dCancel").onclick=closeDrawer;$("#scrim").onclick=closeDrawer;
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
 
@@ -820,6 +1018,11 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
 function updateSearchNote(){
   const n=$("#searchNote");
   if(!query||view==="team"){ n.hidden=true; return; }
+  if(view==="influencers"){
+    const hits=Object.values(influencers).filter(infMatches).length; n.hidden=false;
+    n.innerHTML=`${hits?`<b>${hits}</b> ${hits===1?"influencer matches":"influencers match"}`:"No influencers match"} “${esc(query)}” <button type="button" class="linkbtn" id="qClear2">Clear search</button>`;
+    $("#qClear2").onclick=clearSearch; return;
+  }
   const pool=view==="archive"?campaigns.filter(c=>c.archivedAt):campaigns.filter(c=>!c.archivedAt);
   const hits=pool.filter(c=>(!chanFilter.size||chanFilter.has(c.channel))&&matchesQuery(c)).length;
   n.hidden=false;
@@ -841,7 +1044,9 @@ document.addEventListener("keydown",e=>{
 $("#newBtn").onclick=()=>openDrawer(null);
 $("#dSave").onclick=async()=>{
   if(!canWrite())return;
-  const c={...draft,influencer:$("#fInf").value.trim(),asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim()};
+  const pickedInf=influencers[draft.influencerId];
+  if(!pickedInf){$("#fErr").textContent=Object.keys(influencers).length?"Choose an influencer from the list.":"Add the influencer in the Influencers tab first, then choose them here.";return;}
+  const c={...draft,influencer:pickedInf.name,influencerId:pickedInf.id,asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim()};
   if(c.postUrl&&!safeUrl(c.postUrl)){$("#fErr").textContent="Live Post link needs to be a full web address starting with https://";return;}
   if(c.filesUrl&&!safeUrl(c.filesUrl)){$("#fErr").textContent="Source Files link needs to be a full web address starting with https://";return;}
   if(!c.influencer){$("#fErr").textContent="Add an influencer name to save.";return;}
@@ -858,7 +1063,7 @@ async function saveCampaign(c,msg){
   const {data,error}=await q;
   if(error||!data||!data.length){toast(error?("Couldn't save: "+error.message):"You don't have permission to change this.");return false;}
   const row=fromRow(data[0]); const i=campaigns.findIndex(x=>x.id===row.id);
-  if(i>=0)campaigns[i]=row;else campaigns.push(row);
+  if(i>=0)campaigns[i]=row;else campaigns.push(row); applyInfluencerNames();
   render(); toast(msg); return true;
 }
 async function setArchived(id,on){
@@ -881,18 +1086,27 @@ async function loadProfiles(){
 async function loadCampaigns(){
   const {data,error}=await sb.from("campaigns").select("*").order("start_date",{ascending:true,nullsFirst:false});
   if(error){setSync(false,"Couldn't load campaigns");return;}
-  campaigns=data.map(fromRow);
+  campaigns=data.map(fromRow); applyInfluencerNames();
 }
+async function loadInfluencers(){
+  const {data,error}=await sb.from("influencers").select("*").order("name");
+  if(error){ influencers={}; return; }   // table not created yet
+  influencers={}; data.forEach(r=>influencers[r.id]={id:r.id,name:r.name,handle:r.handle||"",pets:r.pet_names||[],createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at});
+  applyInfluencerNames();
+}
+// Linked campaigns always show the directory's current name (so renames carry through)
+function applyInfluencerNames(){ campaigns.forEach(c=>{ const i=influencers[c.influencerId]; if(i) c.influencer=i.name; }); }
 async function loadMe(uid){
   await loadProfiles();
   me=profiles[uid]||null;
 }
 function subscribe(uid){
   if(channelSub) sb.removeChannel(channelSub);
-  let t=null; const refresh=()=>{clearTimeout(t);t=setTimeout(async()=>{await Promise.all([loadProfiles(),loadCampaigns()]);me=profiles[uid]||me;render();},250);};
+  let t=null; const refresh=()=>{clearTimeout(t);t=setTimeout(async()=>{await Promise.all([loadProfiles(),loadCampaigns(),loadInfluencers()]); applyInfluencerNames();me=profiles[uid]||me;render();},250);};
   channelSub=sb.channel("tracker")
     .on("postgres_changes",{event:"*",schema:"public",table:"campaigns"},refresh)
     .on("postgres_changes",{event:"*",schema:"public",table:"profiles"},refresh)
+    .on("postgres_changes",{event:"*",schema:"public",table:"influencers"},refresh)
     .subscribe(s=>{ if(s==="SUBSCRIBED") setSync(true,"Live, synced with your team"); else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT") setSync(false,"Live updates paused, refresh to sync"); });
 }
 
@@ -910,7 +1124,7 @@ async function showApp(session){
   if(!me){ // profile trigger may lag a moment after first sign-in
     await new Promise(r=>setTimeout(r,800)); await loadMe(session.user.id);
   }
-  await loadCampaigns(); render(); subscribe(session.user.id);
+  await Promise.all([loadCampaigns(),loadInfluencers()]); applyInfluencerNames(); render(); subscribe(session.user.id);
 }
 $("#loginForm").addEventListener("submit",async e=>{
   e.preventDefault(); $("#lErr").textContent=""; $("#lOk").textContent=""; $("#lBtn").disabled=true;
