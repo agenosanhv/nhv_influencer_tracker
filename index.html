@@ -323,6 +323,19 @@ td .links{margin-top:0;flex-wrap:nowrap}
 .viewtoggle button svg{width:13px;height:13px}
 .viewtoggle button:hover{color:var(--ink)}
 .viewtoggle button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+/* search */
+.barright{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 10px 0 12px;height:34px;width:280px;max-width:100%;transition:border-color .15s,box-shadow .15s}
+.search:focus-within{border-color:var(--action,#4F0CE8);box-shadow:0 0 0 3px color-mix(in srgb,var(--action,#4F0CE8) 15%,transparent)}
+.search svg{width:15px;height:15px;color:var(--ink-3);flex:none}
+.search input{border:0;background:none;outline:none;flex:1;min-width:0;font-size:13px;color:var(--ink);padding:0}
+.search input::-webkit-search-cancel-button{display:none}
+.search kbd{font:700 11px/1 Nunito,sans-serif;color:var(--ink-3);border:1px solid var(--line);border-radius:5px;padding:2px 6px;background:var(--bg)}
+.search #qClear{border:0;background:var(--surface-2);color:var(--ink-2);width:20px;height:20px;border-radius:50%;font-size:10px;display:grid;place-items:center;padding:0}
+.searchnote{margin-top:14px;font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.searchnote b{color:var(--ink)}
+@media (max-width:760px){.barright{width:100%;justify-content:flex-start}.search{width:100%}}
 </style>
 </head>
 <body>
@@ -404,9 +417,18 @@ td .links{margin-top:0;flex-wrap:nowrap}
       <button class="tab" role="tab" data-view="team" aria-selected="false" id="teamTab" hidden>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 14c.5-2.5 2.3-4 4.5-4s4 1.5 4.5 4"/><circle cx="11.5" cy="6" r="2"/><path d="M11 10c1.8 0 3.2 1.2 3.6 3.2"/></svg>Team</button>
     </div>
-    <div class="filters" id="filters"></div>
+    <div class="barright">
+      <label class="search" id="searchBox">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.75"/><path d="M10.5 10.5l3.5 3.5"/></svg>
+        <input type="search" id="q" placeholder="Search influencer, asset, notes…" aria-label="Search campaigns" autocomplete="off">
+        <kbd id="qHint">/</kbd>
+        <button type="button" id="qClear" aria-label="Clear search" hidden>✕</button>
+      </label>
+      <div class="filters" id="filters"></div>
+    </div>
   </div>
 
+  <div class="searchnote" id="searchNote" hidden></div>
   <main class="view" id="view"></main>
 </div>
 </div>
@@ -523,7 +545,15 @@ function linkChips(c){
 }
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
 function setSync(on,text){ const s=$("#sync"); s.classList.toggle("on",on); s.querySelector("span").textContent=text; }
-const byChan = c => !chanFilter.size || chanFilter.has(c.channel);
+let query="";
+const norm = t => String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+// Every word typed must appear somewhere in the campaign (influencer, asset, notes, channel, status, creator)
+function matchesQuery(c){
+  if(!query) return true;
+  const hay=norm([c.influencer,c.asset,c.notes,c.channel,c.status,nameOf(c.createdBy),nameOf(c.updatedBy)].join(" "));
+  return norm(query).split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
+}
+const byChan = c => (!chanFilter.size || chanFilter.has(c.channel)) && matchesQuery(c);
 function visible(){ return campaigns.filter(c => !c.archivedAt && byChan(c)); }   // board, calendar, table
 function archivedList(){ return campaigns.filter(c => c.archivedAt && byChan(c)).sort((a,b)=>new Date(b.archivedAt)-new Date(a.archivedAt)); }
 
@@ -681,7 +711,7 @@ function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r
 /* ---------- archive ---------- */
 function renderArchive(){
   const items=archivedList();
-  if(!items.length) return `<div class="empty">Nothing archived${chanFilter.size?" for these channels":""} yet.<br><span class="muted">Open any campaign and choose <b>Archive</b> to move it here. You can restore it any time.</span></div>`;
+  if(!items.length) return `<div class="empty">${query?`No archived campaigns match “${esc(query)}”.`:`Nothing archived${chanFilter.size?" for these channels":""} yet.`}<br><span class="muted">Open any campaign and choose <b>Archive</b> to move it here. You can restore it any time.</span></div>`;
   return `<div class="archlist">${items.map(c=>{const k=ch(c.channel);return `<div class="archrow" data-id="${esc(c.id)}" style="--c:${k.c}">
     <div class="archmain" role="button" tabindex="0">${tag(c.channel)}<div class="archtxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></div></div>
     <div class="archdates"><span class="when">${CAL_ICON}<span>${fmtRange(c.start,c.end)}</span></span>${stat(c.status)}</div>
@@ -729,7 +759,8 @@ function render(){
   $("#teamTab").hidden = role()!=="admin";
   if(view==="team" && role()!=="admin") view="board";
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===view));
-  renderFilters(); renderRole();
+  renderFilters(); renderRole(); updateSearchNote();
+  $("#searchBox").hidden = view==="team";
   const v=$("#view");
   const ac=campaigns.filter(c=>c.archivedAt).length; $("#archCount").textContent=ac?ac:"";
   if(view==="team"){v.innerHTML=renderTeam();wireTeam();return;}
@@ -784,6 +815,29 @@ function syncOpenLinks(){
 function closeDrawer(){$("#drawer").classList.remove("open");$("#scrim").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");}
 $("#dClose").onclick=closeDrawer;$("#dCancel").onclick=closeDrawer;$("#scrim").onclick=closeDrawer;
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+
+/* ---------- search ---------- */
+function updateSearchNote(){
+  const n=$("#searchNote");
+  if(!query||view==="team"){ n.hidden=true; return; }
+  const pool=view==="archive"?campaigns.filter(c=>c.archivedAt):campaigns.filter(c=>!c.archivedAt);
+  const hits=pool.filter(c=>(!chanFilter.size||chanFilter.has(c.channel))&&matchesQuery(c)).length;
+  n.hidden=false;
+  n.innerHTML=`${hits?`<b>${hits}</b> ${hits===1?"campaign matches":"campaigns match"}`:"No campaigns match"} “${esc(query)}”${view==="archive"?" in the archive":""} <button type="button" class="linkbtn" id="qClear2">Clear search</button>`;
+  $("#qClear2").onclick=clearSearch;
+}
+let qTimer=null;
+$("#q").addEventListener("input",e=>{
+  $("#qClear").hidden=!e.target.value; $("#qHint").hidden=!!e.target.value;
+  clearTimeout(qTimer); qTimer=setTimeout(()=>{ query=e.target.value.trim(); render(); },120);
+});
+$("#q").addEventListener("keydown",e=>{ if(e.key==="Escape"){ e.stopPropagation(); if($("#q").value) clearSearch(); else $("#q").blur(); } });
+function clearSearch(){ $("#q").value=""; query=""; $("#qClear").hidden=true; $("#qHint").hidden=false; render(); $("#q").focus(); }
+$("#qClear").onclick=e=>{ e.preventDefault(); clearSearch(); };
+// Press "/" anywhere to jump to search
+document.addEventListener("keydown",e=>{
+  if(e.key==="/"&&!e.metaKey&&!e.ctrlKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&!$("#drawer").classList.contains("open")){ e.preventDefault(); $("#q").focus(); }
+});
 $("#newBtn").onclick=()=>openDrawer(null);
 $("#dSave").onclick=async()=>{
   if(!canWrite())return;
