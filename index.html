@@ -429,6 +429,19 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
 .rolesel.viewer{background-color:#ECEEF2;color:#5B6375;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%235B6375' stroke-width='1.8'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E")}
 .rolesel option{background:#fff;color:#1A1A1A;font-weight:600}
 .role.owner.lg{font-size:12px;padding:5px 12px}
+
+/* animated toggle + card transitions */
+button.viewtoggle{position:relative}
+.viewtoggle .thumb{position:absolute;top:2px;left:2px;width:24px;height:22px;border-radius:999px;background:var(--ink);transition:transform .24s cubic-bezier(.3,.9,.3,1.15)}
+.viewtoggle[aria-pressed="true"] .thumb{transform:translateX(24px)}
+.viewtoggle>span{position:relative;z-index:1;background:none!important;transition:color .2s}
+.viewtoggle>span.on{color:var(--surface)}
+@keyframes cardIn{from{opacity:0;transform:translateY(-6px) scale(.985)}to{opacity:1;transform:none}}
+.card.cardin{animation:cardIn .34s cubic-bezier(.2,.8,.2,1) both}
+.card{transition:box-shadow .2s,transform .2s}
+.card:not(.mini):hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(20,20,20,.06),0 8px 20px rgba(20,20,20,.08)}
+.card.mini:hover{transform:translateX(2px)}
+@media (prefers-reduced-motion:reduce){.viewtoggle .thumb,.card{transition:none}.card.cardin{animation:none}}
 </style>
 </head>
 <body>
@@ -718,10 +731,27 @@ $("#filters").addEventListener("click",e=>{const b=e.target.closest(".chipf");if
 const COMPACT_KEY="nhv-tracker-compact-cols";
 let compactCols=new Set(["Done"]);
 try{ const saved=JSON.parse(localStorage.getItem(COMPACT_KEY)); if(Array.isArray(saved)) compactCols=new Set(saved); }catch(e){}
+const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 function toggleCompact(st){
+  const sel=`.col[data-status="${CSS.escape(st)}"]`;
+  const before=document.querySelector(sel), oldH=before?before.offsetHeight:0;
   compactCols.has(st)?compactCols.delete(st):compactCols.add(st);
   try{ localStorage.setItem(COMPACT_KEY,JSON.stringify([...compactCols])); }catch(e){}
   render();
+  if(reduceMotion()) return;
+  const col=document.querySelector(sel); if(!col) return;
+  // cards fade/slide in one after another
+  col.querySelectorAll(".card").forEach((c,i)=>{ c.style.animationDelay=Math.min(i*35,280)+"ms"; c.classList.add("cardin"); });
+  // column smoothly grows/shrinks to its new height (other columns stay put)
+  const newH=col.offsetHeight;
+  if(Math.abs(newH-oldH)>2){
+    col.style.height=oldH+"px"; col.style.overflow="hidden";
+    col.offsetHeight; // lock in the start height
+    col.style.transition="height .32s cubic-bezier(.2,.8,.2,1)";
+    col.style.height=newH+"px";
+    const done=()=>{ col.style.height=""; col.style.overflow=""; col.style.transition=""; col.removeEventListener("transitionend",done); };
+    col.addEventListener("transitionend",done); setTimeout(done,450);
+  }
 }
 const ICON_COMPACT=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg>`;
 const ICON_EXPAND=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="4.5" rx="1"/><rect x="2.5" y="9" width="11" height="4.5" rx="1"/></svg>`;
@@ -739,7 +769,7 @@ function renderBoard(){
   return `<div class="board">${Object.keys(STATUSES).map(s=>{
     const col=items.filter(c=>(c.status||"Not Started")===s).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
     return `<section class="col" data-status="${esc(s)}">
-      <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><button type="button" class="viewtoggle" data-compact="${esc(s)}" aria-pressed="${compactCols.has(s)}" aria-label="Compact ${esc(s)} cards" title="${compactCols.has(s)?"Switch to full cards":"Switch to compact cards"}"><span class="${compactCols.has(s)?"":"on"}">${ICON_EXPAND}</span><span class="${compactCols.has(s)?"on":""}">${ICON_COMPACT}</span></button></span></div>
+      <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><button type="button" class="viewtoggle" data-compact="${esc(s)}" aria-pressed="${compactCols.has(s)}" aria-label="Compact ${esc(s)} cards" title="${compactCols.has(s)?"Switch to full cards":"Switch to compact cards"}"><i class="thumb" aria-hidden="true"></i><span class="${compactCols.has(s)?"":"on"}">${ICON_EXPAND}</span><span class="${compactCols.has(s)?"on":""}">${ICON_COMPACT}</span></button></span></div>
       ${col.map(c=>{const k=ch(c.channel); if(compactCols.has(s)) return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
         ${tag(c.channel)}
         <div class="who">${esc(infPrimary(c))}${infH(c)&&c.influencer?` <span class="whoh">${esc(c.influencer)}</span>`:""}</div>
@@ -753,7 +783,13 @@ function renderBoard(){
 }
 function wireBoard(){
   document.querySelectorAll("[data-compact]").forEach(b=>b.addEventListener("click",e=>{
-    e.stopPropagation(); toggleCompact(b.dataset.compact);
+    e.stopPropagation();
+    if(b.dataset.busy) return; b.dataset.busy="1";
+    // slide the highlight first, then swap the cards
+    const mini=b.getAttribute("aria-pressed")!=="true";
+    b.setAttribute("aria-pressed",mini);
+    b.querySelectorAll("span").forEach((sp,i)=>sp.classList.toggle("on",mini?i===1:i===0));
+    setTimeout(()=>toggleCompact(b.dataset.compact), reduceMotion()?0:170);
   }));
   let dragId=null;
   document.querySelectorAll(".card").forEach(el=>{
