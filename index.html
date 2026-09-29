@@ -301,6 +301,11 @@ td .links{margin-top:0;flex-wrap:nowrap}
 .archact{display:flex;gap:6px;justify-content:flex-end}
 .empty .muted{color:var(--ink-3);font-size:13px}
 @media (max-width:900px){.archrow{grid-template-columns:1fr auto}.archdates,.archlinks,.archwho{grid-column:1 / -1}.archact{grid-row:1;grid-column:2}}
+
+.dstack{display:inline-flex;flex-direction:column;line-height:1.15;white-space:nowrap}
+.dstack .yr{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--ink-3)}
+
+.yrside{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--ink-3);opacity:.85;margin-left:1px}
 </style>
 </head>
 <body>
@@ -446,6 +451,19 @@ let editing = null, draft = {}, channelSub = null;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const parse = s => { if(!s) return null; const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+// Date with a tiny year "eyebrow" above it (used in the Table view)
+const fmtYr = s => { const d=parse(s); return d ? `<span class="dstack"><span class="yr">${d.getFullYear()}</span>${esc(d.toLocaleDateString(undefined,{month:"short",day:"numeric"}))}</span>` : "—"; };
+// "Oct 26 → Nov 9 2026" with the year small beside it; both years shown if they differ
+const yrTag = d => `<span class="yrside">${d.getFullYear()}</span>`;
+const md = d => esc(d.toLocaleDateString(undefined,{month:"short",day:"numeric"}));
+function fmtRange(a,b){
+  const s=parse(a), e=parse(b);
+  if(!s&&!e) return "No dates";
+  if(!s) return `→ ${md(e)} ${yrTag(e)}`;
+  if(!e) return `${md(s)} ${yrTag(s)} →`;
+  return s.getFullYear()===e.getFullYear() ? `${md(s)} → ${md(e)} ${yrTag(e)}` : `${md(s)} ${yrTag(s)} → ${md(e)} ${yrTag(e)}`;
+}
+const fmtSide = v => { const d=parse(v); return d ? `${md(d)} ${yrTag(d)}` : "—"; };
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -503,7 +521,7 @@ function miniCard(c,k){
   return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
     <span class="miniico">${icon(c.channel)}</span>
     <span class="minitxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></span>
-    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Live Post" aria-label="Open live post">▶</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Source Files" aria-label="Open source files">📁</a>`:""}<span class="minidate">${esc(fmt(c.end))}</span></span>
+    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Live Post" aria-label="Open live post">▶</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Source Files" aria-label="Open source files">📁</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
   </div>`;
 }
 function renderBoard(){
@@ -516,7 +534,7 @@ function renderBoard(){
         ${tag(c.channel)}
         <div class="who">${esc(c.influencer||"Untitled")}</div>
         <div class="what">${esc(c.asset||"")}</div>
-        <div class="when">🗓 ${fmt(c.start)} → ${fmt(c.end)}</div>
+        <div class="when">🗓 ${fmtRange(c.start,c.end)}</div>
         ${linkChips(c)}
         <div class="stamps">${stamp("Created",c.createdBy,c.createdAt)}${(c.updatedAt&&c.createdAt&&Math.abs(new Date(c.updatedAt)-new Date(c.createdAt))>60000)?stamp("Edited",c.updatedBy,c.updatedAt):""}</div>
       </div>`}).join("")}
@@ -615,7 +633,7 @@ function wireCalendar(){
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
   return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Asset</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
-  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmt(c.start)}</td><td>${fmt(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt)}</td><td>${stamp("",c.updatedBy,c.updatedAt)}</td></tr>`}).join("")}
+  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt)}</td><td>${stamp("",c.updatedBy,c.updatedAt)}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
 function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
