@@ -459,8 +459,8 @@ button.viewtoggle{position:relative}
 #idrawer.stack{z-index:13;width:min(400px,100%);box-shadow:-14px 0 40px rgba(0,0,0,.18)}
 
 /* notes: one line in the table, full text on click */
-td.notecell{max-width:260px}
-.noteclip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-3);max-width:260px}
+td.notecell{max-width:180px}
+.noteclip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-3);max-width:180px}
 .noteclip.cut{cursor:zoom-in;border-radius:6px}
 .noteclip.cut:hover,.noteclip.open{color:var(--ink);text-decoration:underline dotted;text-underline-offset:3px}
 .notepop{position:fixed;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(20,20,20,.16);padding:12px 14px 12px;opacity:0;transform:translateY(-4px);transition:opacity .16s,transform .16s}
@@ -479,7 +479,19 @@ td .links{flex-wrap:nowrap;width:max-content}
 /* table: keep short values on one line; wide tables scroll sideways instead of squishing */
 th{white-space:nowrap}
 td .status,td .tag,td .stamp{white-space:nowrap}
-td .noteclip{min-width:160px}
+td.notecell{min-width:120px}
+
+
+/* fit the table in the page: tighter cells, no sideways scrolling on normal screens */
+.tablewrap table{min-width:0}
+td,th{padding-left:10px;padding-right:10px}
+@media (min-width:1280px){.tablewrap{overflow-x:visible}}
+
+.tstamp{display:flex;align-items:flex-start;gap:6px;font-size:12px;color:var(--ink-3);line-height:1.3}
+.tstamp .stampico{margin-top:1px}
+.tstamp>div{display:flex;flex-direction:column}
+.tsn{color:var(--ink-2);font-weight:600;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.tsd{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -722,6 +734,12 @@ const STAMP_ICONS={
   archive:`<svg class="stampico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"/><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"/></svg>`
 };
 function stampIcon(label){ const l=String(label).toLowerCase(); return l.includes("archiv")?STAMP_ICONS.archive:(l.includes("edit")?STAMP_ICONS.edit:STAMP_ICONS.add); }
+// Compact two-line version for the table: name on top, date underneath
+function tstamp(id,ts,kind){
+  if(!ts&&!id) return "";
+  const n=nameOf(id);
+  return `<div class="tstamp" title="${esc(n?n+" · ":"")}${esc(fullStamp(ts))}">${STAMP_ICONS[kind]}<div>${n?`<span class="tsn">${esc(n)}</span>`:""}<span class="tsd">${esc(shortDate(ts))}</span></div></div>`;
+}
 function stamp(label,id,ts,kind){
   if(!ts && !id) return "";
   const n=nameOf(id);
@@ -922,7 +940,7 @@ function wireCalendar(){
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
   return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Campaign Name</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
-  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td>${(()=>{const h=influencers[c.influencerId]&&influencers[c.influencerId].handle;return h?`<div class="tdinf"><b>${esc(infHandle(h))}</b><span>${esc(c.influencer||"")}</span></div>`:`<b>${esc(c.influencer||"Untitled")}</b>`;})()}</td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="notecell">${c.notes?`<div class="noteclip" tabindex="0" data-note="${esc(c.id)}">${esc(c.notes)}</div>`:""}</td><td>${stamp("",c.createdBy,c.createdAt,"add")}</td><td>${stamp("",c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
+  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td>${(()=>{const h=influencers[c.influencerId]&&influencers[c.influencerId].handle;return h?`<div class="tdinf"><b>${esc(infHandle(h))}</b><span>${esc(c.influencer||"")}</span></div>`:`<b>${esc(c.influencer||"Untitled")}</b>`;})()}</td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="notecell">${c.notes?`<div class="noteclip" tabindex="0" data-note="${esc(c.id)}">${esc(c.notes)}</div>`:""}</td><td>${tstamp(c.createdBy,c.createdAt,"add")}</td><td>${tstamp(c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
 function wireTable(){
