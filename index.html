@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campaign Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F7F9; --surface:#FFFFFF; --surface-2:#F0F2F5; --ink:#1B2130; --ink-2:#5B6375; --ink-3:#8C93A3;
+  --line:#E3E6EC; --accent:#3D5AFE; --accent-ink:#FFFFFF; --today:#E8364F; --shadow:0 1px 2px rgba(20,26,40,.06),0 4px 14px rgba(20,26,40,.06);
+  --ns:#9AA1B1; --ip:#F2A93B; --live:#22A55B; --done:#B5BAC6;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181F; --surface:#1D2129; --surface-2:#252A34; --ink:#ECEEF3; --ink-2:#AAB1C0; --ink-3:#7A8294;
+    --line:#2E3440; --accent:#7B90FF; --accent-ink:#0E1220; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+    --ns:#7A8294; --done:#5D6474; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181F; --surface:#1D2129; --surface-2:#252A34; --ink:#ECEEF3; --ink-2:#AAB1C0; --ink-3:#7A8294;
+  --line:#2E3440; --accent:#7B90FF; --accent-ink:#0E1220; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+  --ns:#7A8294; --done:#5D6474; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font:500 14px/1.45 Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.app{max-width:1280px;margin:0 auto;padding:28px 24px 60px}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0;display:flex;align-items:center;gap:10px}
+.sub{color:var(--ink-3);font-size:13px;margin-top:4px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:#D33A4F}
+
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tabs{display:flex;gap:2px}
+.tab{background:none;border:0;padding:10px 12px;color:var(--ink-2);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:7px}
+.tab svg{width:16px;height:16px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0}
+.chipf{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2);display:inline-flex;gap:5px;align-items:center}
+.chipf[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.view{margin-top:18px}
+.empty{padding:40px;text-align:center;color:var(--ink-3)}
+
+/* channel tag */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:2px 8px 2px 6px;border-radius:6px;background:var(--c);color:var(--cf);white-space:nowrap}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--s)}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:14px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--surface-2);border-radius:12px;padding:10px;min-height:200px;transition:background .15s}
+.col.over{background:color-mix(in srgb,var(--accent) 12%,var(--surface-2))}
+.colhead{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 10px}
+.colhead .status{color:var(--ink);font-weight:700;font-size:13.5px}
+.count{color:var(--ink-3);font-size:12px;font-weight:700}
+.card{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:var(--shadow);border-left:4px solid var(--c);cursor:grab;text-align:left;width:100%;border-top:0;border-right:0;border-bottom:0;display:block}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.4}
+.card .who{font-weight:700;font-size:14.5px;margin:8px 0 2px}
+.card .what{color:var(--ink-2);font-size:13px}
+.card .when{color:var(--ink-3);font-size:12px;margin-top:10px;display:flex;align-items:center;gap:5px}
+.addcard{width:100%;background:none;border:1px dashed var(--line);border-radius:10px;padding:8px;color:var(--ink-3);font-weight:600}
+.addcard:hover{color:var(--ink);border-color:var(--ink-3)}
+
+/* calendar */
+.calhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.calhead h2{font-size:20px;font-weight:800;margin:0 8px 0 0;letter-spacing:-.01em;min-width:170px}
+.iconbtn{width:32px;height:32px;padding:0;justify-content:center}
+.calwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.cal{min-width:720px}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line)}
+.dow div{padding:8px 10px;font-size:12px;font-weight:700;color:var(--ink-3)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:min-content;position:relative;min-height:112px;border-bottom:1px solid var(--line)}
+.week:last-child{border-bottom:0}
+.daybg{grid-row:1 / span 20;border-right:1px solid var(--line);min-height:112px}
+.daybg:nth-child(7){border-right:0}
+.daybg.out{background:var(--surface-2)}
+.daynum{grid-row:1;font-size:12.5px;font-weight:700;color:var(--ink-2);padding:6px 10px 4px;z-index:1;pointer-events:none}
+.daynum.out{color:var(--ink-3);font-weight:500}
+.daynum.today span{background:var(--today);color:#fff;border-radius:999px;padding:1px 7px}
+.evt{z-index:2;margin:2px 4px;height:24px;border-radius:6px;background:var(--c);color:var(--cf);font-size:12px;font-weight:700;padding:0 8px;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;text-align:left}
+.evt.done{opacity:.45}
+.evt.cont-l{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0}
+.evt.cont-r{border-top-right-radius:0;border-bottom-right-radius:0;margin-right:0}
+.evt span{overflow:hidden;text-overflow:ellipsis}
+
+/* table */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th{font-size:12px;font-weight:700;color:var(--ink-3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
+td{padding:11px 14px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--surface-2)}
+td.muted{color:var(--ink-3)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,14,24,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:var(--surface);z-index:11;transform:translateX(100%);transition:transform .25s ease;box-shadow:-10px 0 30px rgba(0,0,0,.12);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.drawer.open{transform:none}
+.dhead{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.dhead h3{margin:0;font-size:17px;font-weight:800}
+.dbody{padding:20px 22px;overflow:auto;flex:1;display:grid;gap:16px;align-content:start}
+label.f{display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 11px;font-weight:500;color:var(--ink);width:100%}
+.f textarea{min-height:80px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pickers{display:flex;flex-wrap:wrap;gap:6px}
+.pick{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 9px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.pick[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.dfoot{display:flex;justify-content:space-between;gap:8px;padding:16px 22px;border-top:1px solid var(--line)}
+.err{color:#D33A4F;font-size:12.5px;font-weight:600;min-height:1em}
+
+.me{display:flex;align-items:center;gap:10px;position:relative}
+.rolebtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:13px}
+.av{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:11px;font-weight:800;color:#fff;background:var(--avc,#6B7280);flex:none}
+.av.sm{width:22px;height:22px;font-size:10px}
+.role{font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--rb);color:var(--rf)}
+.role.admin{--rb:#E6EAFF;--rf:#2F47C9}.role.employee{--rb:#DDF3E6;--rf:#177A43}.role.viewer{--rb:#ECEEF2;--rf:#5B6375}
+.pop{position:absolute;right:0;top:calc(100% + 8px);width:300px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px;z-index:5;display:none}
+.pop.open{display:block}
+.pop h4{margin:0 0 8px;font-size:13.5px}
+.pop dl{margin:0;display:grid;gap:8px;font-size:12.5px}
+.pop dt{display:flex;align-items:center;gap:6px}
+.pop dd{margin:0 0 0 2px;color:var(--ink-2)}
+.pop p{font-size:12px;color:var(--ink-3);margin:10px 0 0}
+.card .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.card .foot .when{margin-top:0}
+.edited{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:8px}
+body.ro .addcard,body.ro #newBtn{display:none}
+body.ro .card{cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;opacity:0;transition:all .2s;z-index:20;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.sync{font-size:12px;color:var(--ink-3);display:inline-flex;align-items:center;gap:6px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--ink-3);display:inline-block}
+.sync.on i{background:var(--live)}
+
+@media (max-width:640px){
+  .app{padding:18px 14px 50px}
+  h1{font-size:24px}
+  .board{grid-template-columns:repeat(4,82%)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* auth screens */
+.auth{min-height:100vh;display:grid;place-items:center;padding:24px}
+.authcard{width:min(380px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:28px}
+.authcard h2{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
+.authcard .sub{margin:0 0 20px}
+.authcard form{display:grid;gap:14px}
+.authcard .btn.primary{justify-content:center;padding:10px}
+.linkbtn{background:none;border:0;color:var(--accent);font-weight:600;padding:0;font-size:13px}
+.ok{color:#177A43;font-size:12.5px;font-weight:600;min-height:1em}
+[hidden]{display:none!important}
+/* team */
+.team td select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg)}
+.team tbody tr{cursor:default}
+.team tbody tr:hover td{background:none}
+.hint{color:var(--ink-3);font-size:12.5px;margin:12px 2px 0}
+</style>
+</head>
+<body>
+
+<!-- ============ SIGN IN ============ -->
+<section class="auth" id="authView" hidden>
+  <div class="authcard">
+    <div id="loginBox">
+      <h2>📅 Campaign Tracker</h2>
+      <p class="sub">Sign in with the email your admin invited.</p>
+      <form id="loginForm">
+        <label class="f">Email<input type="email" id="lEmail" autocomplete="username" required></label>
+        <label class="f">Password<input type="password" id="lPass" autocomplete="current-password" required></label>
+        <div class="err" id="lErr"></div>
+        <button class="btn primary" type="submit" id="lBtn">Sign in</button>
+      </form>
+      <p style="margin:14px 0 0"><button class="linkbtn" id="forgotBtn" type="button">Forgot password?</button></p>
+      <div class="ok" id="lOk"></div>
+    </div>
+    <div id="setPassBox" hidden>
+      <h2>Set your password</h2>
+      <p class="sub">Choose a password to finish setting up your account.</p>
+      <form id="setPassForm">
+        <label class="f">Your name<input id="sName" autocomplete="name" placeholder="e.g. Adrian Lopez"></label>
+        <label class="f">New password<input type="password" id="sPass" autocomplete="new-password" minlength="8" required></label>
+        <div class="err" id="sErr"></div>
+        <button class="btn primary" type="submit">Save password</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div class="app" id="appView" hidden>
+  <header class="top">
+    <div>
+      <h1>📅 Campaigns</h1>
+      <div class="sub"><span class="sync" id="sync"><i></i><span>Connecting…</span></span></div>
+    </div>
+    <div class="me">
+      <button class="rolebtn" id="roleBtn" aria-expanded="false"></button>
+      <div class="pop" id="rolePop" role="dialog" aria-label="Your account">
+        <h4>Who can do what</h4>
+        <dl>
+          <dt><span class="role admin">Admin</span></dt><dd>Add, edit, move and delete campaigns. Manages team roles.</dd>
+          <dt><span class="role employee">Employee</span></dt><dd>Add, edit and move campaigns. Can't delete.</dd>
+          <dt><span class="role viewer">Viewer</span></dt><dd>Sees everything, can't change anything.</dd>
+        </dl>
+        <p style="margin-top:14px"><button class="btn" id="signOutBtn" type="button">Sign out</button></p>
+      </div>
+      <button class="btn primary" id="newBtn">＋ New campaign</button>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-view="board" aria-selected="true">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2" width="3.5" height="12" rx="1"/><rect x="6.25" y="2" width="3.5" height="8" rx="1"/><rect x="11" y="2" width="3.5" height="10" rx="1"/></svg>Board</button>
+      <button class="tab" role="tab" data-view="calendar" aria-selected="false">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="2"/><path d="M1.5 6.5h13M5 1v3M11 1v3"/></svg>Calendar</button>
+      <button class="tab" role="tab" data-view="table" aria-selected="false">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 6h13M1.5 9.75h13M6 2.5v11"/></svg>Table</button>
+      <button class="tab" role="tab" data-view="team" aria-selected="false" id="teamTab" hidden>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 14c.5-2.5 2.3-4 4.5-4s4 1.5 4.5 4"/><circle cx="11.5" cy="6" r="2"/><path d="M11 10c1.8 0 3.2 1.2 3.6 3.2"/></svg>Team</button>
+    </div>
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <main class="view" id="view"></main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dhead"><h3 id="dTitle">New campaign</h3><button class="btn iconbtn" id="dClose" aria-label="Close">✕</button></div>
+  <div class="dbody">
+    <label class="f">Influencer<input id="fInf" placeholder="e.g. Maya Chen"></label>
+    <label class="f">Asset<input id="fAsset" placeholder="e.g. Fall recipe reel"></label>
+    <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Channel<div class="pickers" id="fChan"></div></div>
+    <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Status<div class="pickers" id="fStat"></div></div>
+    <div class="row2">
+      <label class="f">Start<input type="date" id="fStart"></label>
+      <label class="f">End<input type="date" id="fEnd"></label>
+    </div>
+    <label class="f">Notes<textarea id="fNotes" placeholder="Anything the team should know"></textarea></label>
+    <div class="edited" id="fEdited"></div>
+    <div class="err" id="fErr"></div>
+  </div>
+  <div class="dfoot">
+    <button class="btn danger" id="dDelete">Delete</button>
+    <div style="display:flex;gap:8px"><button class="btn" id="dCancel">Cancel</button><button class="btn primary" id="dSave">Save</button></div>
+  </div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script>
+/* =========================================================
+   1) PASTE YOUR SUPABASE DETAILS HERE
+   (Supabase > Project Settings > API)
+   The "anon public" key is meant to be public; your data is
+   protected by the security rules in supabase-setup.sql.
+   ========================================================= */
+const SUPABASE_URL      = "https://bepzixtdylzrwgsfpeop.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_5xcd2fKczillhM0ja--5lg_CV0SHdcg";
+
+const CHANNELS = {
+  "Meta":      {e:"📘", c:"#1877F2", f:"#fff"},
+  "TikTok":    {e:"🎵", c:"#2B2B2E", f:"#fff"},
+  "YouTube":   {e:"▶️", c:"#FF0033", f:"#fff"},
+  "Instagram": {e:"📸", c:"#C13584", f:"#fff"},
+  "Pinterest": {e:"📌", c:"#BD081C", f:"#fff"}
+};
+const STATUSES = {"Not Started":"var(--ns)","In Progress":"var(--ip)","Live":"var(--live)","Done":"var(--done)"};
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let me = null;            // my profile row
+let profiles = {};        // id -> profile
+let campaigns = [];
+let view = "board", chanFilter = new Set();
+let calMonth = (()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1)})();
+let editing = null, draft = {}, channelSub = null;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const parse = s => { if(!s) return null; const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
+const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+const ch = name => CHANNELS[name] || {e:"•", c:"#8C93A3", f:"#fff"};
+const tag = name => { const c=ch(name); return `<span class="tag" style="--c:${c.c};--cf:${c.f}">${c.e} ${esc(name||"No channel")}</span>`; };
+const stat = s => `<span class="status" style="--s:${STATUSES[s]||"var(--ns)"}"><i class="dot"></i>${esc(s||"Not Started")}</span>`;
+const role = () => me ? me.role : "viewer";
+const canWrite = () => role()==="admin" || role()==="employee";
+const canDelete = () => role()==="admin";
+
+const AVC=["#3D5AFE","#E8590C","#0CA678","#AE3EC9","#1098AD","#D6336C","#5C940D"];
+function avColor(id){let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))>>>0;return AVC[h%AVC.length];}
+function initials(n){return (n||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()||"?";}
+function nameOf(id){ const p=profiles[id]; if(!p||p.hide_name) return null; return p.full_name||p.email||"Teammate"; }
+function av(id,sm){ const n=nameOf(id); if(!n) return ""; return `<span class="av ${sm?"sm":""}" style="--avc:${avColor(id)}" title="Last edited by ${esc(n)}">${esc(initials(n))}</span>`; }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
+function setSync(on,text){ const s=$("#sync"); s.classList.toggle("on",on); s.querySelector("span").textContent=text; }
+function visible(){ return campaigns.filter(c => !chanFilter.size || chanFilter.has(c.channel)); }
+
+/* ---------- mapping between database rows and the page ---------- */
+const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,updatedBy:r.updated_by,updatedAt:r.updated_at});
+const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||""});
+
+/* ---------- filters ---------- */
+function renderFilters(){
+  if(view==="team"){ $("#filters").innerHTML=""; return; }
+  const used=new Set(campaigns.map(c=>c.channel));
+  $("#filters").innerHTML=Object.keys(CHANNELS).filter(k=>used.has(k)).map(k=>`<button class="chipf" data-ch="${esc(k)}" aria-pressed="${chanFilter.has(k)}">${CHANNELS[k].e} ${esc(k)}</button>`).join("");
+}
+$("#filters").addEventListener("click",e=>{const b=e.target.closest(".chipf");if(!b)return;const k=b.dataset.ch;chanFilter.has(k)?chanFilter.delete(k):chanFilter.add(k);render();});
+
+/* ---------- board ---------- */
+function renderBoard(){
+  const items=visible();
+  return `<div class="board">${Object.keys(STATUSES).map(s=>{
+    const col=items.filter(c=>(c.status||"Not Started")===s).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+    return `<section class="col" data-status="${esc(s)}">
+      <div class="colhead">${stat(s)}<span class="count">${col.length}</span></div>
+      ${col.map(c=>{const k=ch(c.channel);return `<button class="card" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
+        ${tag(c.channel)}
+        <div class="who">${esc(c.influencer||"Untitled")}</div>
+        <div class="what">${esc(c.asset||"")}</div>
+        <div class="foot"><div class="when">🗓 ${fmt(c.start)} → ${fmt(c.end)}</div>${av(c.updatedBy,true)}</div>
+      </button>`}).join("")}
+      <button class="addcard" data-add="${esc(s)}">＋ Add</button>
+    </section>`;}).join("")}</div>`;
+}
+function wireBoard(){
+  let dragId=null;
+  document.querySelectorAll(".card").forEach(el=>{
+    el.addEventListener("dragstart",e=>{if(!canWrite()){e.preventDefault();return;}dragId=el.dataset.id;el.classList.add("dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",dragId);});
+    el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+    el.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===el.dataset.id)));
+  });
+  document.querySelectorAll(".col").forEach(col=>{
+    col.addEventListener("dragover",e=>{e.preventDefault();col.classList.add("over");});
+    col.addEventListener("dragleave",e=>{if(!col.contains(e.relatedTarget))col.classList.remove("over");});
+    col.addEventListener("drop",e=>{e.preventDefault();col.classList.remove("over");
+      const id=dragId||e.dataTransfer.getData("text/plain"); const c=campaigns.find(x=>x.id===id);
+      if(c&&canWrite()&&c.status!==col.dataset.status) saveCampaign({...c,status:col.dataset.status},`Moved to ${col.dataset.status}`);
+    });
+  });
+  document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>openDrawer(null,{status:b.dataset.add})));
+}
+
+/* ---------- calendar ---------- */
+function renderCalendar(){
+  const m=calMonth,first=m,last=new Date(m.getFullYear(),m.getMonth()+1,0);
+  const gridStart=addDays(first,-((first.getDay()+6)%7));
+  const weeks=[];for(let w=gridStart;w<=last;w=addDays(w,7))weeks.push(w);
+  const items=visible().filter(c=>c.start&&c.end).map(c=>({...c,s:parse(c.start),e:parse(c.end)})).sort((a,b)=>a.s-b.s||(b.e-b.s)-(a.e-a.s));
+  const today=new Date();
+  let html=`<div class="calhead"><h2>${esc(m.toLocaleDateString(undefined,{month:"long",year:"numeric"}))}</h2>
+    <button class="btn iconbtn" id="calPrev" aria-label="Previous month">‹</button>
+    <button class="btn" id="calToday">Today</button>
+    <button class="btn iconbtn" id="calNext" aria-label="Next month">›</button></div>
+    <div class="calwrap"><div class="cal"><div class="dow">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div>${d}</div>`).join("")}</div>`;
+  for(const ws of weeks){
+    const we=addDays(ws,6);let cells="";
+    for(let i=0;i<7;i++){const d=addDays(ws,i);cells+=`<div class="daybg ${d.getMonth()!==m.getMonth()?"out":""}" style="grid-column:${i+1}"></div>`;}
+    for(let i=0;i<7;i++){const d=addDays(ws,i);cells+=`<div class="daynum ${d.getMonth()!==m.getMonth()?"out":""} ${sameDay(d,today)?"today":""}" style="grid-column:${i+1}"><span>${d.getDate()}</span></div>`;}
+    const lanes=[];
+    for(const c of items){
+      if(c.e<ws||c.s>we)continue;
+      const s=Math.max(0,Math.round((c.s-ws)/864e5)),e=Math.min(6,Math.round((c.e-ws)/864e5));
+      let lane=lanes.findIndex(end=>end<s);if(lane<0){lane=lanes.length;lanes.push(-1);}lanes[lane]=e;
+      const k=ch(c.channel);
+      const cls=[c.status==="Done"?"done":"",c.s<ws?"cont-l":"",c.e>we?"cont-r":""].join(" ");
+      cells+=`<button class="evt ${cls}" data-id="${esc(c.id)}" title="${esc(c.influencer)} · ${esc(c.asset)}" style="grid-column:${s+1} / ${e+2};grid-row:${lane+2};--c:${k.c};--cf:${k.f}">${k.e}<span>${esc(c.influencer||"Untitled")} — ${esc(c.asset||"")}</span></button>`;
+    }
+    html+=`<div class="week">${cells}</div>`;
+  }
+  return html+`</div></div>`;
+}
+function wireCalendar(){
+  $("#calPrev").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);render();};
+  $("#calNext").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);render();};
+  $("#calToday").onclick=()=>{const d=new Date();calMonth=new Date(d.getFullYear(),d.getMonth(),1);render();};
+  document.querySelectorAll(".evt").forEach(el=>el.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===el.dataset.id))));
+}
+
+/* ---------- table ---------- */
+function renderTable(){
+  const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Asset</th><th>Status</th><th>Start</th><th>End</th><th>Notes</th><th>Edited by</th></tr></thead><tbody>
+  ${items.map(c=>{const n=nameOf(c.updatedBy);return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmt(c.start)}</td><td>${fmt(c.end)}</td><td class="muted">${esc(c.notes||"")}</td><td>${n?`<span style="display:inline-flex;gap:6px;align-items:center">${av(c.updatedBy,true)}<span class="muted">${esc(n)}</span></span>`:""}</td></tr>`}).join("")}
+  </tbody></table></div>`;
+}
+function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
+
+/* ---------- team (admins only) ---------- */
+function renderTeam(){
+  const people=Object.values(profiles).sort((a,b)=>(a.full_name||a.email||"").localeCompare(b.full_name||b.email||""));
+  return `<div class="tablewrap team"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Show name on edits</th></tr></thead><tbody>
+  ${people.map(p=>`<tr><td><span style="display:inline-flex;gap:8px;align-items:center"><span class="av sm" style="--avc:${avColor(p.id)}">${esc(initials(p.full_name||p.email))}</span><b>${esc(p.full_name||"")}</b>${p.id===me.id?' <span class="muted">(you)</span>':""}</span></td>
+    <td class="muted">${esc(p.email||"")}</td>
+    <td><select data-role="${esc(p.id)}" ${p.id===me.id?"disabled title=\"Ask another admin to change your role\"":""}>${["admin","employee","viewer"].map(r=>`<option value="${r}" ${p.role===r?"selected":""}>${r[0].toUpperCase()+r.slice(1)}</option>`).join("")}</select></td>
+    <td><input type="checkbox" data-hide="${esc(p.id)}" ${p.hide_name?"":"checked"} aria-label="Show name on edits"></td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="hint">To add someone, invite their email in Supabase (Authentication → Users → Invite user). They'll appear here as a Viewer once they set a password.</p>`;
+}
+function wireTeam(){
+  document.querySelectorAll("[data-role]").forEach(s=>s.addEventListener("change",async()=>{
+    const {error}=await sb.from("profiles").update({role:s.value}).eq("id",s.dataset.role);
+    if(error){toast("Couldn't change the role: "+error.message);loadProfiles();} else toast("Role updated");
+  }));
+  document.querySelectorAll("[data-hide]").forEach(cb=>cb.addEventListener("change",async()=>{
+    const {error}=await sb.from("profiles").update({hide_name:!cb.checked}).eq("id",cb.dataset.hide);
+    if(error){toast("Couldn't save: "+error.message);loadProfiles();} else toast("Saved");
+  }));
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.body.classList.toggle("ro",!canWrite());
+  $("#teamTab").hidden = role()!=="admin";
+  if(view==="team" && role()!=="admin") view="board";
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===view));
+  renderFilters(); renderRole();
+  const v=$("#view");
+  if(view==="team"){v.innerHTML=renderTeam();wireTeam();return;}
+  if(!campaigns.length&&view!=="calendar"){v.innerHTML=`<div class="empty">${canWrite()?`No campaigns yet. Add your first one to see it on the board and calendar.<br><br><button class="btn primary" id="emptyNew">＋ New campaign</button>`:"No campaigns yet."}</div>`;const b=$("#emptyNew");if(b)b.onclick=()=>openDrawer(null);return;}
+  if(view==="board"){v.innerHTML=renderBoard();wireBoard();}
+  else if(view==="calendar"){v.innerHTML=renderCalendar();wireCalendar();}
+  else{v.innerHTML=renderTable();wireTable();}
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{view=t.dataset.view;render();}));
+
+function renderRole(){
+  if(!me) return;
+  const label={admin:"Admin",employee:"Employee",viewer:"Viewer"}[role()];
+  const nm=me.full_name||me.email;
+  $("#roleBtn").innerHTML=`<span class="av" style="--avc:${avColor(me.id)}">${esc(initials(nm))}</span><span>${esc(nm)}</span><span class="role ${role()}">${label}</span>`;
+}
+$("#roleBtn").addEventListener("click",e=>{e.stopPropagation();const o=$("#rolePop").classList.toggle("open");$("#roleBtn").setAttribute("aria-expanded",o);});
+document.addEventListener("click",e=>{if(!e.target.closest("#rolePop"))$("#rolePop").classList.remove("open");});
+$("#signOutBtn").onclick=async()=>{await sb.auth.signOut();};
+
+/* ---------- drawer ---------- */
+function pickers(){
+  const ro=!canWrite();
+  $("#fChan").innerHTML=Object.entries(CHANNELS).map(([k,v])=>`<button type="button" class="pick" data-v="${esc(k)}" aria-pressed="${draft.channel===k}" ${ro?"disabled":""}>${v.e} ${esc(k)}</button>`).join("");
+  $("#fStat").innerHTML=Object.keys(STATUSES).map(k=>`<button type="button" class="pick" data-v="${esc(k)}" aria-pressed="${draft.status===k}" ${ro?"disabled":""}>${stat(k)}</button>`).join("");
+}
+$("#fChan").addEventListener("click",e=>{const b=e.target.closest(".pick");if(b&&canWrite()){draft.channel=b.dataset.v;pickers();}});
+$("#fStat").addEventListener("click",e=>{const b=e.target.closest(".pick");if(b&&canWrite()){draft.status=b.dataset.v;pickers();}});
+function openDrawer(c,preset={}){
+  editing=c||null; draft={channel:"Meta",status:"Not Started",...(c||{}),...preset};
+  const ro=!canWrite();
+  $("#dTitle").textContent=ro?"Campaign":(c?"Edit campaign":"New campaign");
+  $("#fInf").value=draft.influencer||"";$("#fAsset").value=draft.asset||"";
+  $("#fStart").value=draft.start||"";$("#fEnd").value=draft.end||"";$("#fNotes").value=draft.notes||"";
+  document.querySelectorAll("#drawer input,#drawer textarea").forEach(el=>el.disabled=ro);
+  $("#dSave").hidden=ro; $("#dCancel").textContent=ro?"Close":"Cancel";
+  $("#dDelete").style.visibility=(c&&canDelete())?"visible":"hidden";
+  const n=c&&nameOf(c.updatedBy);
+  $("#fEdited").innerHTML=n?`${av(c.updatedBy,true)}<span>Last edited by ${esc(n)}${c.updatedAt?" · "+esc(new Date(c.updatedAt).toLocaleDateString(undefined,{month:"short",day:"numeric"})):""}</span>`:"";
+  $("#fErr").textContent=""; pickers();
+  $("#drawer").classList.add("open");$("#scrim").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");
+  if(!ro) setTimeout(()=>$("#fInf").focus(),50);
+}
+function closeDrawer(){$("#drawer").classList.remove("open");$("#scrim").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");}
+$("#dClose").onclick=closeDrawer;$("#dCancel").onclick=closeDrawer;$("#scrim").onclick=closeDrawer;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+$("#newBtn").onclick=()=>openDrawer(null);
+$("#dSave").onclick=async()=>{
+  if(!canWrite())return;
+  const c={...draft,influencer:$("#fInf").value.trim(),asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim()};
+  if(!c.influencer){$("#fErr").textContent="Add an influencer name to save.";return;}
+  if(c.start&&c.end&&c.end<c.start){$("#fErr").textContent="End date needs to be on or after the start date.";return;}
+  const ok=await saveCampaign(c,editing?"Saved":"Campaign added"); if(ok) closeDrawer();
+};
+$("#dDelete").onclick=async()=>{ if(editing&&canDelete()&&confirm(`Delete "${editing.influencer} — ${editing.asset}"?`)){ if(await deleteCampaign(editing.id)) closeDrawer(); } };
+
+/* ---------- data ---------- */
+async function saveCampaign(c,msg){
+  if(!canWrite())return false;
+  const q=c.id?sb.from("campaigns").update(toRow(c)).eq("id",c.id).select():sb.from("campaigns").insert(toRow(c)).select();
+  const {data,error}=await q;
+  if(error||!data||!data.length){toast(error?("Couldn't save: "+error.message):"You don't have permission to change this.");return false;}
+  const row=fromRow(data[0]); const i=campaigns.findIndex(x=>x.id===row.id);
+  if(i>=0)campaigns[i]=row;else campaigns.push(row);
+  render(); toast(msg); return true;
+}
+async function deleteCampaign(id){
+  if(!canDelete())return false;
+  const {data,error}=await sb.from("campaigns").delete().eq("id",id).select();
+  if(error||!data||!data.length){toast(error?("Couldn't delete: "+error.message):"Only admins can delete campaigns.");return false;}
+  campaigns=campaigns.filter(c=>c.id!==id); render(); toast("Deleted"); return true;
+}
+async function loadProfiles(){
+  const {data,error}=await sb.from("profiles").select("*");
+  if(!error){profiles={};data.forEach(p=>profiles[p.id]=p);}
+}
+async function loadCampaigns(){
+  const {data,error}=await sb.from("campaigns").select("*").order("start_date",{ascending:true,nullsFirst:false});
+  if(error){setSync(false,"Couldn't load campaigns");return;}
+  campaigns=data.map(fromRow);
+}
+async function loadMe(uid){
+  await loadProfiles();
+  me=profiles[uid]||null;
+}
+function subscribe(uid){
+  if(channelSub) sb.removeChannel(channelSub);
+  let t=null; const refresh=()=>{clearTimeout(t);t=setTimeout(async()=>{await Promise.all([loadProfiles(),loadCampaigns()]);me=profiles[uid]||me;render();},250);};
+  channelSub=sb.channel("tracker")
+    .on("postgres_changes",{event:"*",schema:"public",table:"campaigns"},refresh)
+    .on("postgres_changes",{event:"*",schema:"public",table:"profiles"},refresh)
+    .subscribe(s=>{ if(s==="SUBSCRIBED") setSync(true,"Live, synced with your team"); else if(s==="CHANNEL_ERROR"||s==="TIMED_OUT") setSync(false,"Live updates paused, refresh to sync"); });
+}
+
+/* ---------- auth ---------- */
+function showAuth(mode){
+  $("#appView").hidden=true; $("#authView").hidden=false;
+  $("#loginBox").hidden=mode==="setpass"; $("#setPassBox").hidden=mode!=="setpass";
+}
+let shownFor=null;
+async function showApp(session){
+  if(shownFor===session.user.id) return; shownFor=session.user.id;
+  $("#authView").hidden=true; $("#appView").hidden=false;
+  setSync(false,"Loading…");
+  await loadMe(session.user.id);
+  if(!me){ // profile trigger may lag a moment after first sign-in
+    await new Promise(r=>setTimeout(r,800)); await loadMe(session.user.id);
+  }
+  await loadCampaigns(); render(); subscribe(session.user.id);
+}
+$("#loginForm").addEventListener("submit",async e=>{
+  e.preventDefault(); $("#lErr").textContent=""; $("#lOk").textContent=""; $("#lBtn").disabled=true;
+  const {error}=await sb.auth.signInWithPassword({email:$("#lEmail").value.trim(),password:$("#lPass").value});
+  $("#lBtn").disabled=false;
+  if(error) $("#lErr").textContent= error.message==="Invalid login credentials" ? "That email and password don't match. Try again or reset your password." : error.message;
+});
+$("#forgotBtn").onclick=async()=>{
+  const email=$("#lEmail").value.trim(); $("#lErr").textContent=""; $("#lOk").textContent="";
+  if(!email){$("#lErr").textContent="Enter your email above first.";return;}
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error) $("#lErr").textContent=error.message; else $("#lOk").textContent="Check your email for a link to reset your password.";
+};
+$("#setPassForm").addEventListener("submit",async e=>{
+  e.preventDefault(); $("#sErr").textContent="";
+  const name=$("#sName").value.trim();
+  const {data,error}=await sb.auth.updateUser({password:$("#sPass").value});
+  if(error){$("#sErr").textContent=error.message;return;}
+  if(name){ await sb.rpc("set_my_name",{new_name:name}); }
+  needsPassword=false; history.replaceState(null,"",location.pathname);
+  const {data:{session}}=await sb.auth.getSession(); if(session) showApp(session);
+});
+
+const urlType=new URLSearchParams(location.hash.slice(1)).get("type");
+let needsPassword = urlType==="invite" || urlType==="recovery";
+sb.auth.onAuthStateChange((event,session)=>{
+  // Supabase recommends not calling it from inside this callback, so defer the work.
+  setTimeout(()=>handleAuth(event,session),0);
+});
+function handleAuth(event,session){
+  if(event==="PASSWORD_RECOVERY"){ needsPassword=true; showAuth("setpass"); return; }
+  if(event==="SIGNED_OUT"||!session){ shownFor=null; me=null; campaigns=[]; if(channelSub){sb.removeChannel(channelSub);channelSub=null;} showAuth("login"); return; }
+  if(needsPassword){ showAuth("setpass"); return; }
+  if(event==="SIGNED_IN"||event==="INITIAL_SESSION") showApp(session);
+}
+</script>
+</body>
+</html>
