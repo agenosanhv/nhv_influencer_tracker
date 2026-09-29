@@ -411,6 +411,9 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
 .minilink.post:hover{background:#E9E1FD}
 .minilink.files{background:#EFF6FD;color:#0F5AA8;border:1px solid #CFE2F6}
 .minilink.files:hover{background:#E0EDFB}
+
+.stampico{width:14px;height:14px;flex:none;color:var(--ink-3)}
+.stamps.big .stampico{width:15px;height:15px}
 </style>
 </head>
 <body>
@@ -640,10 +643,16 @@ function av(id,sm){ const n=nameOf(id); if(!n) return ""; return `<span class="a
 const shortDate = ts => ts ? new Date(ts).toLocaleDateString(undefined,{month:"short",day:"numeric",year:new Date(ts).getFullYear()!==new Date().getFullYear()?"numeric":undefined}) : "";
 const fullStamp = ts => ts ? new Date(ts).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}) : "";
 // "Created by Adrian · Sep 28" / "Edited by Mayuri · Sep 29"  (names hidden for people with hide_name)
-function stamp(label,id,ts){
+const STAMP_ICONS={
+  add:`<svg class="stampico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M8 5.25v5.5M5.25 8h5.5"/></svg>`,
+  edit:`<svg class="stampico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.6 2.9l2.5 2.5-7.4 7.4-3 .5.5-3z"/><path d="M9.3 4.2l2.5 2.5"/></svg>`,
+  archive:`<svg class="stampico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"/><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"/></svg>`
+};
+function stampIcon(label){ const l=String(label).toLowerCase(); return l.includes("archiv")?STAMP_ICONS.archive:(l.includes("edit")?STAMP_ICONS.edit:STAMP_ICONS.add); }
+function stamp(label,id,ts,kind){
   if(!ts && !id) return "";
   const n=nameOf(id);
-  return `<div class="stamp" title="${esc(label)} ${n?"by "+esc(n)+" ":""}${esc(fullStamp(ts))}">${n?av(id,true):'<span class="av sm ghost"></span>'}<span>${label?`<b>${esc(label)}</b>${n?" by "+esc(n):""}`:(n?esc(n):"")}${ts?((label||n)?" · ":"")+esc(shortDate(ts)):""}</span></div>`;
+  return `<div class="stamp" title="${esc(label)} ${n?"by "+esc(n)+" ":""}${esc(fullStamp(ts))}">${STAMP_ICONS[kind]||stampIcon(label)}<span>${label?`<b>${esc(label)}</b>${n?" by "+esc(n):""}`:(n?esc(n):"")}${ts?((label||n)?" · ":"")+esc(shortDate(ts)):""}</span></div>`;
 }
 // Only allow real web links (blocks "javascript:" and similar)
 function safeUrl(u){ try{ const x=new URL(String(u||"").trim()); return (x.protocol==="https:"||x.protocol==="http:")?x.href:null; }catch(e){ return null; } }
@@ -817,7 +826,7 @@ function wireCalendar(){
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
   return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Campaign Name</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
-  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt)}</td><td>${stamp("",c.updatedBy,c.updatedAt)}</td></tr>`}).join("")}
+  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt,"add")}</td><td>${stamp("",c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
 function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
