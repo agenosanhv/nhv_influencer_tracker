@@ -400,6 +400,12 @@ body.ro #addInfTop{display:none}
 .sizetoggle{width:28px;height:26px;border:1px solid var(--line);background:var(--surface);border-radius:8px;display:grid;place-items:center;color:var(--ink-2);padding:0}
 .sizetoggle svg{width:14px;height:14px}
 .sizetoggle:hover{border-color:var(--ink-3);color:var(--ink)}
+
+button.viewtoggle{cursor:pointer;gap:0}
+.viewtoggle>span{width:24px;height:22px;border-radius:999px;display:grid;place-items:center;color:var(--ink-3);transition:background .15s,color .15s}
+.viewtoggle>span svg{width:13px;height:13px}
+.viewtoggle>span.on{background:var(--ink);color:var(--surface)}
+button.viewtoggle:hover>span:not(.on){color:var(--ink)}
 </style>
 </head>
 <body>
@@ -699,7 +705,7 @@ function renderBoard(){
   return `<div class="board">${Object.keys(STATUSES).map(s=>{
     const col=items.filter(c=>(c.status||"Not Started")===s).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
     return `<section class="col" data-status="${esc(s)}">
-      <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><button type="button" class="sizetoggle" data-compact="${esc(s)}" aria-pressed="${compactCols.has(s)}" aria-label="Compact ${esc(s)} cards" title="${compactCols.has(s)?"Show full cards":"Show compact cards"}">${compactCols.has(s)?ICON_EXPAND:ICON_COMPACT}</button></span></div>
+      <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><button type="button" class="viewtoggle" data-compact="${esc(s)}" aria-pressed="${compactCols.has(s)}" aria-label="Compact ${esc(s)} cards" title="${compactCols.has(s)?"Switch to full cards":"Switch to compact cards"}"><span class="${compactCols.has(s)?"":"on"}">${ICON_EXPAND}</span><span class="${compactCols.has(s)?"on":""}">${ICON_COMPACT}</span></button></span></div>
       ${col.map(c=>{const k=ch(c.channel); if(compactCols.has(s)) return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
         ${tag(c.channel)}
         <div class="who">${esc(c.influencer||"Untitled")}${influencers[c.influencerId]&&influencers[c.influencerId].handle?` <span class="whoh">${esc(infHandle(influencers[c.influencerId].handle))}</span>`:""}</div>
