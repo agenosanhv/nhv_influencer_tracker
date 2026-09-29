@@ -457,6 +457,20 @@ button.viewtoggle{position:relative}
 .optadd b{color:var(--action,#4F0CE8)}
 .optplus{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--action,#4F0CE8) 12%,var(--surface));color:var(--action,#4F0CE8);font-weight:800;font-size:13px;flex:none}
 #idrawer.stack{z-index:13;width:min(400px,100%);box-shadow:-14px 0 40px rgba(0,0,0,.18)}
+
+/* notes: one line in the table, full text on click */
+td.notecell{max-width:260px}
+.noteclip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-3);max-width:260px}
+.noteclip.cut{cursor:zoom-in;border-radius:6px}
+.noteclip.cut:hover,.noteclip.open{color:var(--ink);text-decoration:underline dotted;text-underline-offset:3px}
+.notepop{position:fixed;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(20,20,20,.16);padding:12px 14px 12px;opacity:0;transform:translateY(-4px);transition:opacity .16s,transform .16s}
+.notepop.in{opacity:1;transform:none}
+.nphead{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.nphead b{font:800 13px Nunito,"Open Sans",sans-serif}
+.nphead span{font-size:12px;color:var(--ink-3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npx{border:0;background:var(--surface-2);width:22px;height:22px;border-radius:50%;font-size:10px;color:var(--ink-2);display:grid;place-items:center;padding:0;align-self:center}
+.npbody{font-size:13.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto}
+.npedit{margin-top:10px;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -899,10 +913,41 @@ function wireCalendar(){
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
   return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Campaign Name</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
-  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td>${(()=>{const h=influencers[c.influencerId]&&influencers[c.influencerId].handle;return h?`<div class="tdinf"><b>${esc(infHandle(h))}</b><span>${esc(c.influencer||"")}</span></div>`:`<b>${esc(c.influencer||"Untitled")}</b>`;})()}</td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt,"add")}</td><td>${stamp("",c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
+  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td>${(()=>{const h=influencers[c.influencerId]&&influencers[c.influencerId].handle;return h?`<div class="tdinf"><b>${esc(infHandle(h))}</b><span>${esc(c.influencer||"")}</span></div>`:`<b>${esc(c.influencer||"Untitled")}</b>`;})()}</td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="notecell">${c.notes?`<div class="noteclip" tabindex="0" data-note="${esc(c.id)}">${esc(c.notes)}</div>`:""}</td><td>${stamp("",c.createdBy,c.createdAt,"add")}</td><td>${stamp("",c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
-function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
+function wireTable(){
+  document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",e=>{ if(e.target.closest("a")) return; openDrawer(campaigns.find(c=>c.id===r.dataset.id)); }));
+  document.querySelectorAll(".noteclip").forEach(el=>{
+    const cut=el.scrollWidth>el.clientWidth+1; el.classList.toggle("cut",cut);
+    if(!cut) return;                                  // short notes just open the campaign like the rest of the row
+    const show=e=>{ e.stopPropagation(); e.preventDefault(); showNotePop(el); };
+    el.addEventListener("click",show);
+    el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" ") show(e); });
+  });
+}
+/* full-note popover */
+function showNotePop(el){
+  hideNotePop();
+  const c=campaigns.find(x=>x.id===el.dataset.note); if(!c) return;
+  const pop=document.createElement("div"); pop.className="notepop"; pop.id="notePop"; pop.setAttribute("role","dialog"); pop.setAttribute("aria-label","Full note");
+  pop.innerHTML=`<div class="nphead"><b>Notes</b><span>${esc(infPrimary(c))} · ${esc(c.asset||"")}</span><button type="button" class="npx" aria-label="Close">✕</button></div><div class="npbody">${esc(c.notes)}</div>${canWrite()?`<button type="button" class="linkbtn npedit">Edit in campaign</button>`:""}`;
+  document.body.appendChild(pop);
+  const r=el.getBoundingClientRect(), w=Math.min(380,window.innerWidth-24);
+  pop.style.width=w+"px";
+  let left=Math.min(Math.max(12,r.left),window.innerWidth-w-12);
+  let top=r.bottom+8; const ph=pop.offsetHeight;
+  if(top+ph>window.innerHeight-12) top=Math.max(12,r.top-ph-8);
+  pop.style.left=left+"px"; pop.style.top=top+"px";
+  requestAnimationFrame(()=>pop.classList.add("in"));
+  pop.querySelector(".npx").onclick=hideNotePop;
+  const ed=pop.querySelector(".npedit"); if(ed) ed.onclick=()=>{ hideNotePop(); openDrawer(c); setTimeout(()=>$("#fNotes").focus(),120); };
+  el.classList.add("open");
+}
+function hideNotePop(){ const p=$("#notePop"); if(p) p.remove(); document.querySelectorAll(".noteclip.open").forEach(x=>x.classList.remove("open")); }
+document.addEventListener("click",e=>{ if(!e.target.closest("#notePop")&&!e.target.closest(".noteclip")) hideNotePop(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") hideNotePop(); });
+window.addEventListener("scroll",hideNotePop,true); window.addEventListener("resize",hideNotePop);
 
 /* ---------- influencer directory ---------- */
 function infCampaigns(id){ return campaigns.filter(c=>c.influencerId===id).sort((a,b)=>(b.start||"").localeCompare(a.start||"")); }
