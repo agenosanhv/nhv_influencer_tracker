@@ -420,6 +420,15 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
 
 .role.owner{--rb:#1A1A1A;--rf:#FFFFFF}
 .role.owner.lg{font-size:12px;padding:5px 10px;display:inline-block}
+
+/* role pills in the Team tab */
+.team td select.rolesel{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;padding:5px 28px 5px 12px;font:800 12px Nunito,"Open Sans",sans-serif;cursor:pointer;background-repeat:no-repeat;background-position:right 10px center;background-size:10px}
+.team td select.rolesel:disabled{cursor:default;opacity:1}
+.rolesel.admin{background-color:#FDE8DA;color:#B24F0B;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23B24F0B' stroke-width='1.8'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E")}
+.rolesel.employee{background-color:#EDF6DC;color:#217C01;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23217C01' stroke-width='1.8'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E")}
+.rolesel.viewer{background-color:#ECEEF2;color:#5B6375;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%235B6375' stroke-width='1.8'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E")}
+.rolesel option{background:#fff;color:#1A1A1A;font-weight:600}
+.role.owner.lg{font-size:12px;padding:5px 12px}
 </style>
 </head>
 <body>
@@ -470,7 +479,7 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
       <div class="pop" id="rolePop" role="dialog" aria-label="Your account">
         <h4>Who can do what</h4>
         <dl>
-          <dt><span class="role owner">Owner</span></dt><dd>Developer. Full access. Admins can't change the owner's role or settings.</dd>
+          <dt><span class="role owner">Developer</span></dt><dd>Full access. Admins can't change the Developer's role or settings.</dd>
           <dt><span class="role admin">Admin</span></dt><dd>Add, edit, move and delete campaigns. Manages team roles.</dd>
           <dt><span class="role employee">Employee</span></dt><dd>Add, edit and move campaigns. Can't delete.</dd>
           <dt><span class="role viewer">Viewer</span></dt><dd>Sees everything, can't change anything.</dd>
@@ -969,13 +978,14 @@ function renderTeam(){
   return `<div class="tablewrap team"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Show name on edits</th></tr></thead><tbody>
   ${people.map(p=>`<tr><td><span style="display:inline-flex;gap:8px;align-items:center"><span class="av sm" style="--avc:${avColor(p.id)}">${esc(initials(p.full_name||p.email))}</span><b>${esc(p.full_name||"")}</b>${p.id===me.id?' <span class="muted">(you)</span>':""}</span></td>
     <td class="muted">${esc(p.email||"")}</td>
-    <td>${p.role==="owner"?`<span class="role owner lg" title="The owner's role can only be changed by the developer">Owner · Developer</span>`:`<select data-role="${esc(p.id)}" ${p.id===me.id?"disabled title=\"Ask another admin to change your role\"":""}>${["admin","employee","viewer"].map(r=>`<option value="${r}" ${p.role===r?"selected":""}>${r[0].toUpperCase()+r.slice(1)}</option>`).join("")}</select>`}</td>
-    <td><input type="checkbox" data-hide="${esc(p.id)}" ${p.hide_name?"":"checked"} aria-label="Show name on edits" ${p.role==="owner"&&role()!=="owner"?'disabled title="Only the owner can change this"':""}></td></tr>`).join("")}
+    <td>${p.role==="owner"?`<span class="role owner lg" title="This role can only be changed in the database">Developer</span>`:`<select class="rolesel ${esc(p.role)}" data-role="${esc(p.id)}" ${p.id===me.id?"disabled title=\"Ask another admin to change your role\"":""}>${["admin","employee","viewer"].map(r=>`<option value="${r}" ${p.role===r?"selected":""}>${r[0].toUpperCase()+r.slice(1)}</option>`).join("")}</select>`}</td>
+    <td><input type="checkbox" data-hide="${esc(p.id)}" ${p.hide_name?"":"checked"} aria-label="Show name on edits" ${p.role==="owner"&&role()!=="owner"?'disabled title="Only the Developer can change this"':""}></td></tr>`).join("")}
   </tbody></table></div>
   <p class="hint">To add someone, invite their email in Supabase (Authentication → Users → Invite user). They'll appear here as a Viewer once they set a password.</p>`;
 }
 function wireTeam(){
   document.querySelectorAll("[data-role]").forEach(s=>s.addEventListener("change",async()=>{
+    s.className="rolesel "+s.value;
     const {error}=await sb.from("profiles").update({role:s.value}).eq("id",s.dataset.role);
     if(error){toast("Couldn't change the role: "+error.message);loadProfiles();} else toast("Role updated");
   }));
@@ -1008,7 +1018,7 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{vie
 
 function renderRole(){
   if(!me) return;
-  const label={owner:"Owner",admin:"Admin",employee:"Employee",viewer:"Viewer"}[role()];
+  const label={owner:"Developer",admin:"Admin",employee:"Employee",viewer:"Viewer"}[role()];
   const nm=me.full_name||me.email;
   $("#roleBtn").innerHTML=`<span class="av" style="--avc:${avColor(me.id)}">${esc(initials(nm))}</span><span>${esc(nm)}</span><span class="role ${role()}">${label}</span>`;
 }
