@@ -391,6 +391,11 @@ td .links{margin-top:0;flex-wrap:nowrap}
 #infLbl{font-size:12.5px;font-weight:700;color:var(--ink-2)}
 div.f:has(#infCombo){display:grid;gap:6px}
 .combopanel input::-webkit-search-cancel-button{display:none}
+
+.topactions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.btn.green{background:#99CC34;color:#1A1A1A;border-color:transparent;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.btn.green:hover{background:#8BBE28}
+body.ro #addInfTop{display:none}
 </style>
 </head>
 <body>
@@ -456,7 +461,10 @@ div.f:has(#infCombo){display:grid;gap:6px}
       <h1>Campaigns</h1>
       <div class="sub"><span class="sync" id="sync"><i></i><span>Connecting…</span></span></div>
     </div>
-    <button class="btn primary" id="newBtn">＋ New campaign</button>
+    <div class="topactions">
+      <button class="btn green" id="addInfTop">＋ Add influencer</button>
+      <button class="btn primary" id="newBtn">＋ New campaign</button>
+    </div>
   </header>
 
   <div class="bar">
@@ -805,7 +813,7 @@ function infCampaigns(id){ return campaigns.filter(c=>c.influencerId===id).sort(
 function petChips(pets){ return (pets||[]).length?`<div class="pets">${pets.map(p=>`<span class="pet">${PAW_ICON}${esc(p)}</span>`).join("")}</div>`:""; }
 function renderInfluencers(){
   const list=Object.values(influencers).filter(infMatches).sort((a,b)=>a.name.localeCompare(b.name));
-  const head=`<div class="infhead"><p class="muted">${Object.keys(influencers).length} influencer${Object.keys(influencers).length===1?"":"s"} in your directory</p>${canWrite()?`<button class="btn primary" id="addInf">＋ Add influencer</button>`:""}</div>`;
+  const head=`<div class="infhead"><p class="muted">${Object.keys(influencers).length} influencer${Object.keys(influencers).length===1?"":"s"} in your directory</p></div>`;
   if(!Object.keys(influencers).length) return head+`<div class="empty">Your directory is empty.<br><span class="muted">Add an influencer here, then pick them when you create a campaign.</span></div>`;
   if(!list.length) return head+`<div class="empty">No influencers match “${esc(query)}”.</div>`;
   return head+`<div class="infgrid">${list.map(i=>{
@@ -817,7 +825,6 @@ function renderInfluencers(){
     </div>`;}).join("")}</div>`;
 }
 function wireInfluencers(){
-  const b=$("#addInf"); if(b) b.onclick=()=>openInfDrawer(null);
   document.querySelectorAll(".infcard").forEach(el=>{
     const open=()=>openInfDrawer(influencers[el.dataset.inf]);
     el.addEventListener("click",open); el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
@@ -1042,6 +1049,7 @@ document.addEventListener("keydown",e=>{
   if(e.key==="/"&&!e.metaKey&&!e.ctrlKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&!$("#drawer").classList.contains("open")){ e.preventDefault(); $("#q").focus(); }
 });
 $("#newBtn").onclick=()=>openDrawer(null);
+$("#addInfTop").onclick=()=>openInfDrawer(null);
 $("#dSave").onclick=async()=>{
   if(!canWrite())return;
   const pickedInf=influencers[draft.influencerId];
