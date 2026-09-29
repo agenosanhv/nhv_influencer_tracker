@@ -842,7 +842,7 @@ function renderInfluencers(){
   return head+`<div class="infgrid">${list.map(i=>{
     const cs=infCampaigns(i.id), live=cs.some(c=>c.status==="Live"&&!c.archivedAt);
     return `<div class="infcard" role="button" tabindex="0" data-inf="${esc(i.id)}">
-      <div class="inftop"><span class="av lg" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><div class="infname"><b>${esc(i.name)}</b><span>${esc(infHandle(i.handle))||'<span class="muted">No handle yet</span>'}</span></div></div>
+      <div class="inftop"><span class="av lg" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><div class="infname">${i.handle?`<b>${esc(infHandle(i.handle))}</b><span>${esc(i.name)}</span>`:`<b>${esc(i.name)}</b><span class="muted">No handle yet</span>`}</div></div>
       ${petChips(i.pets)}
       <div class="infmeta"><span>${cs.length} campaign${cs.length===1?"":"s"}</span>${live?'<span class="livenow">● Live now</span>':cs[0]&&cs[0].start?`<span>Last: ${fmtSide(cs[0].start)}</span>`:""}</div>
     </div>`;}).join("")}</div>`;
