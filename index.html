@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NHV Influencer Tracker</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23F47821%22/%3E%3Cg fill=%22%23fff%22%3E%3Cellipse cx=%2217%22 cy=%2226%22 rx=%225.6%22 ry=%227.2%22 transform=%22rotate(-18 17 26)%22/%3E%3Cellipse cx=%2227.5%22 cy=%2217.5%22 rx=%225.6%22 ry=%227.4%22/%3E%3Cellipse cx=%2239.5%22 cy=%2218%22 rx=%225.6%22 ry=%227.4%22/%3E%3Cellipse cx=%2248.5%22 cy=%2228%22 rx=%225.4%22 ry=%227%22 transform=%22rotate(18 48.5 28)%22/%3E%3Cpath d=%22M33 31.5c7.2 0 15.5 9.6 15.5 16.2 0 4.5-3.8 6.6-7.6 5.8-3-.6-4.9-2-7.9-2s-5 1.4-8 2c-3.8.8-7.6-1.3-7.6-5.8 0-6.6 8.4-16.2 15.6-16.2z%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="favicon.png">
+<meta name="theme-color" content="#1A1A1A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -449,6 +451,12 @@ button.viewtoggle{position:relative}
 .tab{transition:color .2s}
 .tabind{position:absolute;left:0;bottom:-1px;height:2px;width:0;border-radius:2px;background:var(--accent);opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.3,.9,.3,1),width .35s cubic-bezier(.3,.9,.3,1),opacity .2s}
 @media (prefers-reduced-motion:reduce){.tabind{transition:none}}
+
+/* add-new option in the influencer picker + stacked panel */
+.combolist .optadd{border-top:1px solid var(--line);border-radius:0 0 8px 8px;margin-top:4px;padding-top:10px}
+.optadd b{color:var(--action,#4F0CE8)}
+.optplus{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--action,#4F0CE8) 12%,var(--surface));color:var(--action,#4F0CE8);font-weight:800;font-size:13px;flex:none}
+#idrawer.stack{z-index:13;width:min(400px,100%);box-shadow:-14px 0 40px rgba(0,0,0,.18)}
 </style>
 </head>
 <body>
@@ -921,10 +929,12 @@ function wireInfluencers(){
 const parsePets = t => [...new Set(String(t||"").split(",").map(x=>x.trim()).filter(Boolean))].slice(0,20);
 function syncPetPreview(){ $("#iPetPrev").innerHTML=petChips(parsePets($("#iPets").value)); }
 $("#iPets").addEventListener("input",syncPetPreview);
-function openInfDrawer(inf){
+let infFromPicker=false;
+function openInfDrawer(inf,opts={}){
   editingInf=inf||null; const ro=!canWrite();
+  infFromPicker=!!opts.fromPicker; $("#idrawer").classList.toggle("stack",infFromPicker);
   $("#iTitle").textContent=inf?(ro?inf.name:"Edit influencer"):"New influencer";
-  $("#iName").value=inf?inf.name:""; $("#iHandle").value=inf?inf.handle:""; $("#iPets").value=inf?(inf.pets||[]).join(", "):"";
+  $("#iName").value=inf?inf.name:(opts.name||""); $("#iHandle").value=inf?inf.handle:(opts.handle||""); $("#iPets").value=inf?(inf.pets||[]).join(", "):"";
   syncPetPreview();
   ["#iName","#iHandle","#iPets"].forEach(x=>$(x).disabled=ro);
   $("#iSave").hidden=ro; $("#iCancel").textContent=ro?"Close":"Cancel";
@@ -938,7 +948,13 @@ function openInfDrawer(inf){
   $("#idrawer").classList.add("open"); $("#scrim").classList.add("open"); $("#idrawer").setAttribute("aria-hidden","false");
   if(!ro) setTimeout(()=>$("#iName").focus(),50);
 }
-$("#iClose").onclick=closeDrawer; $("#iCancel").onclick=closeDrawer;
+// Closing the influencer panel returns to the campaign form if it was opened from there
+function closeInfDrawer(){
+  if(!infFromPicker){ closeDrawer(); return; }
+  $("#idrawer").classList.remove("open"); $("#idrawer").setAttribute("aria-hidden","true");
+  infFromPicker=false; setTimeout(()=>$("#infBtn").focus(),50);
+}
+$("#iClose").onclick=closeInfDrawer; $("#iCancel").onclick=closeInfDrawer;
 $("#iSave").onclick=async()=>{
   if(!canWrite()) return;
   const name=$("#iName").value.trim().replace(/\s+/g," "), handle=$("#iHandle").value.trim(), pets=parsePets($("#iPets").value);
@@ -949,7 +965,9 @@ $("#iSave").onclick=async()=>{
   const q=editingInf?sb.from("influencers").update(row).eq("id",editingInf.id).select():sb.from("influencers").insert(row).select();
   const {data,error}=await q;
   if(error||!data||!data.length){ $("#iErr").textContent=error?(error.code==="23505"?"That name is already in the directory.":"Couldn't save: "+error.message):"You don't have permission to change this."; return; }
-  await loadInfluencers(); render(); closeDrawer(); toast(editingInf?"Influencer saved":"Influencer added");
+  await loadInfluencers(); render();
+  if(infFromPicker){ setInfPick(data[0].id); $("#fErr").textContent=""; closeInfDrawer(); toast("Influencer added and selected"); return; }
+  closeDrawer(); toast(editingInf?"Influencer saved":"Influencer added");
 };
 $("#iDelete").onclick=async()=>{
   if(!editingInf||!canDelete()) return;
@@ -972,8 +990,10 @@ function renderInfList(){
   const all=Object.values(influencers).sort((a,b)=>a.name.localeCompare(b.name));
   const list=all.filter(i=>!q||q.split(/\s+/).every(w=>norm([i.name,i.handle,(i.pets||[]).join(" ")].join(" ")).includes(w)));
   $("#infList").innerHTML=list.length?list.map((i,n)=>`<button type="button" class="opt ${i.id===draft.influencerId?"sel":""}" role="option" aria-selected="${i.id===draft.influencerId}" data-pick="${esc(i.id)}"><span class="av sm" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><span class="opttxt"><b>${esc(i.handle?infHandle(i.handle):i.name)}</b><span>${esc(i.handle?i.name:"No handle yet")}${i.pets&&i.pets.length?` · ${esc(i.pets.join(", "))}`:""}</span></span>${i.id===draft.influencerId?'<span class="optcheck">✓</span>':""}</button>`).join("")
-    : `<div class="optempty">${all.length?`No influencer matches “${esc($("#infSearch").value.trim())}”.`:"No influencers in the directory yet."}<br><button type="button" class="linkbtn" id="goDirectory">Add them in the Influencers tab</button></div>`;
-  const g=$("#goDirectory"); if(g) g.onclick=()=>{ closeDrawer(); view="influencers"; render(); if(canWrite()) setTimeout(()=>openInfDrawer(null),150); };
+    : `<div class="optempty">${all.length?`No influencer matches “${esc($("#infSearch").value.trim())}”.`:"No influencers in the directory yet."}</div>`;
+  const typed=$("#infSearch").value.trim();
+  if(canWrite()) $("#infList").insertAdjacentHTML("beforeend",`<button type="button" class="opt optadd" id="infAddNew"><span class="optplus">＋</span><span class="opttxt"><b>${typed&&!list.length?`Add “${esc(typed)}” as new influencer`:"Add new influencer"}</b><span>Creates a profile and selects it</span></span></button>`);
+  const a=$("#infAddNew"); if(a) a.onclick=()=>{ closeInfPanel(); openInfDrawer(null,{fromPicker:true,name:(!list.length&&!typed.startsWith("@"))?typed:"",handle:(!list.length&&typed.startsWith("@"))?typed:""}); };
 }
 function openInfPanel(){ $("#infPanel").hidden=false; $("#infBtn").setAttribute("aria-expanded","true"); $("#infSearch").value=""; renderInfList(); setTimeout(()=>$("#infSearch").focus(),0); }
 function closeInfPanel(){ $("#infPanel").hidden=true; $("#infBtn").setAttribute("aria-expanded","false"); }
@@ -1133,8 +1153,8 @@ function closeDrawer(){
   ["#drawer","#idrawer"].forEach(d=>{$(d).classList.remove("open");$(d).setAttribute("aria-hidden","true");});
   $("#scrim").classList.remove("open"); closeInfPanel();
 }
-$("#dClose").onclick=closeDrawer;$("#dCancel").onclick=closeDrawer;$("#scrim").onclick=closeDrawer;
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+$("#dClose").onclick=closeDrawer;$("#dCancel").onclick=closeDrawer;$("#scrim").onclick=()=>{ infFromPicker?closeInfDrawer():closeDrawer(); };
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){ infFromPicker&&$("#idrawer").classList.contains("open")?closeInfDrawer():closeDrawer(); }});
 
 /* ---------- search ---------- */
 function updateSearchNote(){
