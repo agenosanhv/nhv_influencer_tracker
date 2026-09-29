@@ -1041,26 +1041,38 @@ function wireTeam(){
 }
 
 /* ---------- sliding tab underline ---------- */
-function moveTabIndicator(){
+// Slides only when you click a tab. Any other change (refresh, counts filling in,
+// fonts loading, Team tab appearing, resizing) just snaps it into place.
+let slideTab=false;
+function moveTabIndicator(animate){
   const ind=$("#tabInd"), t=document.querySelector('.tab[aria-selected="true"]');
-  if(!ind||!t||t.hidden||!t.offsetWidth){ if(ind) ind.style.opacity=0; return; }
-  const first=!ind.dataset.ready;
-  if(first) ind.style.transition="none";           // no slide on first load
+  if(!ind) return;
+  if(!t||t.hidden||!t.offsetWidth){ ind.style.opacity=0; return; }
+  if(!animate||reduceMotion()) ind.style.transition="none";
   ind.style.opacity=1;
   ind.style.width=t.offsetWidth+"px";
   ind.style.transform=`translateX(${t.offsetLeft}px)`;
-  if(first){ ind.offsetWidth; ind.style.transition=""; ind.dataset.ready="1"; }
+  if(!animate){ ind.offsetWidth; ind.style.transition=""; }
 }
-window.addEventListener("resize",()=>{ const ind=$("#tabInd"); if(!ind) return; ind.style.transition="none"; moveTabIndicator(); ind.offsetWidth; ind.style.transition=""; });
-if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ const ind=$("#tabInd"); if(ind){ delete ind.dataset.ready; moveTabIndicator(); } });
+if(window.ResizeObserver){
+  const ro=new ResizeObserver(()=>{ if(!slideTab) moveTabIndicator(false); });
+  document.querySelectorAll(".tab").forEach(t=>ro.observe(t)); ro.observe($("#tabs"));
+}
+window.addEventListener("resize",()=>moveTabIndicator(false));
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>moveTabIndicator(false));
 
 /* ---------- render ---------- */
 function render(){
+  renderView();
+  // position the underline after tab counts etc. are filled in
+  const anim=slideTab; slideTab=false; moveTabIndicator(anim);
+}
+function renderView(){
   document.body.classList.toggle("ro",!canWrite());
   $("#teamTab").hidden = !isAdmin();
   if(view==="team" && !isAdmin()) view="board";
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===view));
-  renderFilters(); renderRole(); updateSearchNote(); moveTabIndicator();
+  renderFilters(); renderRole(); updateSearchNote();
   $("#searchBox").hidden = view==="team";
   const v=$("#view");
   const ac=campaigns.filter(c=>c.archivedAt).length; $("#archCount").textContent=ac?ac:"";
@@ -1073,7 +1085,7 @@ function render(){
   else if(view==="calendar"){v.innerHTML=renderCalendar();wireCalendar();}
   else{v.innerHTML=renderTable();wireTable();}
 }
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{view=t.dataset.view;try{localStorage.setItem(VIEW_KEY,view);}catch(e){}render();}));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{ if(view!==t.dataset.view) slideTab=true; view=t.dataset.view;try{localStorage.setItem(VIEW_KEY,view);}catch(e){}render();}));
 
 function renderRole(){
   if(!me) return;
