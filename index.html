@@ -406,6 +406,11 @@ button.viewtoggle{cursor:pointer;gap:0}
 .viewtoggle>span svg{width:13px;height:13px}
 .viewtoggle>span.on{background:var(--ink);color:var(--surface)}
 button.viewtoggle:hover>span:not(.on){color:var(--ink)}
+
+.minilink.post{background:#F4F0FE;color:#4F0CE8;border:1px solid #D9CCFB}
+.minilink.post:hover{background:#E9E1FD}
+.minilink.files{background:#EFF6FD;color:#0F5AA8;border:1px solid #CFE2F6}
+.minilink.files:hover{background:#E0EDFB}
 </style>
 </head>
 <body>
@@ -697,7 +702,7 @@ function miniCard(c,k){
   return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
     <span class="miniico">${icon(c.channel)}</span>
     <span class="minitxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></span>
-    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
+    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink post" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink files" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
   </div>`;
 }
 function renderBoard(){
