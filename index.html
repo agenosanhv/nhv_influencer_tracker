@@ -1076,8 +1076,8 @@ function renderView(){
   $("#searchBox").hidden = view==="team";
   const v=$("#view");
   const ac=campaigns.filter(c=>c.archivedAt).length; $("#archCount").textContent=ac?ac:"";
-  if(view==="team"){v.innerHTML=renderTeam();wireTeam();return;}
   const ic=Object.keys(influencers).length; $("#infCount").textContent=ic?ic:"";
+  if(view==="team"){v.innerHTML=renderTeam();wireTeam();return;}
   if(view==="archive"){v.innerHTML=renderArchive();wireArchive();return;}
   if(view==="influencers"){v.innerHTML=renderInfluencers();wireInfluencers();return;}
   if(!campaigns.some(c=>!c.archivedAt)&&view!=="calendar"){v.innerHTML=`<div class="empty">${canWrite()?`No campaigns yet. Add your first one to see it on the board and calendar.<br><br><button class="btn primary" id="emptyNew">＋ New campaign</button>`:"No campaigns yet."}</div>`;const b=$("#emptyNew");if(b)b.onclick=()=>openDrawer(null);return;}
