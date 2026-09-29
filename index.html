@@ -256,6 +256,24 @@ td .stamp{white-space:nowrap}
 .lchip.files{color:#0F5AA8;border-color:#CFE2F6;background:#EFF6FD}
 td .links{margin-top:0;flex-wrap:nowrap}
 .card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* month / year quick picker */
+.mpwrap{position:relative}
+.mptrigger{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid transparent;border-radius:10px;padding:4px 10px 4px 6px;margin-left:-6px;color:var(--ink)}
+.mptrigger:hover,.mptrigger[aria-expanded="true"]{background:var(--surface);border-color:var(--line)}
+.mptrigger h2{margin:0;min-width:0}
+.mp{position:absolute;left:0;top:calc(100% + 8px);width:292px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(20,20,20,.14);padding:14px;z-index:6;display:none}
+.mp.open{display:block}
+.mphead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.mphead select{flex:1;text-align:center;text-align-last:center;border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:var(--bg);font:800 15px Nunito,"Open Sans",sans-serif;color:var(--ink)}
+.mpgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mpm{position:relative;border:1px solid transparent;background:var(--bg);border-radius:10px;padding:10px 0;font:700 13px Nunito,"Open Sans",sans-serif;color:var(--ink-2)}
+.mpm:hover{border-color:var(--line);color:var(--ink)}
+.mpm.today{border-color:var(--accent);color:var(--accent)}
+.mpm.cur{background:var(--action,#4F0CE8);border-color:transparent;color:#fff}
+.mpdot{position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
+.mpm.cur .mpdot{background:#fff}
+.mptoday{display:block;margin:12px auto 0}
 </style>
 </head>
 <body>
@@ -491,7 +509,7 @@ function renderCalendar(){
   const weeks=[];for(let w=gridStart;w<=last;w=addDays(w,7))weeks.push(w);
   const items=visible().filter(c=>c.start&&c.end).map(c=>({...c,s:parse(c.start),e:parse(c.end)})).sort((a,b)=>a.s-b.s||(b.e-b.s)-(a.e-a.s));
   const today=new Date();
-  let html=`<div class="calhead"><h2>${esc(m.toLocaleDateString(undefined,{month:"long",year:"numeric"}))}</h2>
+  let html=`<div class="calhead"><div class="mpwrap"><button class="mptrigger" id="mpBtn" aria-haspopup="dialog" aria-expanded="false"><h2>${esc(m.toLocaleDateString(undefined,{month:"long",year:"numeric"}))}</h2><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4.5l3 3 3-3"/></svg></button><div class="mp" id="mp" role="dialog" aria-label="Choose month and year"></div></div>
     <button class="btn iconbtn" id="calPrev" aria-label="Previous month">‹</button>
     <button class="btn" id="calToday">Today</button>
     <button class="btn iconbtn" id="calNext" aria-label="Next month">›</button></div>
@@ -513,7 +531,40 @@ function renderCalendar(){
   }
   return html+`</div></div>`;
 }
+let mpYear=null;
+function renderMonthPicker(){
+  const now=new Date();
+  const months=[...Array(12)].map((_,i)=>new Date(2000,i,1).toLocaleDateString(undefined,{month:"short"}));
+  // years that have campaigns get a dot, so it's easy to find past work
+  const busy=new Set(campaigns.flatMap(c=>[c.start,c.end]).filter(Boolean).map(d=>d.slice(0,7)));
+  $("#mp").innerHTML=`<div class="mphead"><button class="btn iconbtn" data-yr="-1" aria-label="Previous year">‹</button>
+      <select id="mpYearSel" aria-label="Year">${Array.from({length:11},(_,i)=>now.getFullYear()-5+i).concat(mpYear).filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b).map(y=>`<option ${y===mpYear?"selected":""}>${y}</option>`).join("")}</select>
+      <button class="btn iconbtn" data-yr="1" aria-label="Next year">›</button></div>
+    <div class="mpgrid">${months.map((mn,i)=>{
+      const cur=calMonth.getFullYear()===mpYear&&calMonth.getMonth()===i;
+      const today=now.getFullYear()===mpYear&&now.getMonth()===i;
+      const has=busy.has(`${mpYear}-${String(i+1).padStart(2,"0")}`);
+      return `<button class="mpm ${cur?"cur":""} ${today?"today":""}" data-m="${i}">${esc(mn)}${has?'<i class="mpdot"></i>':""}</button>`;}).join("")}</div>
+    <button class="linkbtn mptoday" data-today="1">Jump to this month</button>`;
+}
+function toggleMonthPicker(open){
+  const mp=$("#mp"), b=$("#mpBtn"); if(!mp) return;
+  const want = open ?? !mp.classList.contains("open");
+  if(want){ mpYear=calMonth.getFullYear(); renderMonthPicker(); }
+  mp.classList.toggle("open",want); b.setAttribute("aria-expanded",want);
+  if(want) setTimeout(()=>{const c=mp.querySelector(".mpm.cur")||mp.querySelector(".mpm");c&&c.focus();},0);
+}
 function wireCalendar(){
+  $("#mpBtn").onclick=e=>{e.stopPropagation();toggleMonthPicker();};
+  $("#mp").addEventListener("click",e=>{
+    e.stopPropagation();
+    const y=e.target.closest("[data-yr]"), mb=e.target.closest("[data-m]"), t=e.target.closest("[data-today]");
+    if(y){ mpYear+=Number(y.dataset.yr); renderMonthPicker(); }
+    else if(mb){ calMonth=new Date(mpYear,Number(mb.dataset.m),1); render(); }
+    else if(t){ const d=new Date(); calMonth=new Date(d.getFullYear(),d.getMonth(),1); render(); }
+  });
+  $("#mp").addEventListener("change",e=>{ if(e.target.id==="mpYearSel"){ mpYear=Number(e.target.value); renderMonthPicker(); } });
+  $("#mp").addEventListener("keydown",e=>{ if(e.key==="Escape"){ e.stopPropagation(); toggleMonthPicker(false); $("#mpBtn").focus(); } });
   $("#calPrev").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);render();};
   $("#calNext").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);render();};
   $("#calToday").onclick=()=>{const d=new Date();calMonth=new Date(d.getFullYear(),d.getMonth(),1);render();};
@@ -574,7 +625,7 @@ function renderRole(){
   $("#roleBtn").innerHTML=`<span class="av" style="--avc:${avColor(me.id)}">${esc(initials(nm))}</span><span>${esc(nm)}</span><span class="role ${role()}">${label}</span>`;
 }
 $("#roleBtn").addEventListener("click",e=>{e.stopPropagation();const o=$("#rolePop").classList.toggle("open");$("#roleBtn").setAttribute("aria-expanded",o);});
-document.addEventListener("click",e=>{if(!e.target.closest("#rolePop"))$("#rolePop").classList.remove("open");});
+document.addEventListener("click",e=>{if(!e.target.closest("#rolePop"))$("#rolePop").classList.remove("open"); if(!e.target.closest(".mpwrap")&&$("#mp"))toggleMonthPicker(false);});
 $("#signOutBtn").onclick=async()=>{await sb.auth.signOut();};
 
 /* ---------- drawer ---------- */
