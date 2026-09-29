@@ -417,6 +417,9 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
 
 .tdinf{display:flex;flex-direction:column;line-height:1.3}
 .tdinf span{font-size:12px;color:var(--ink-3)}
+
+.role.owner{--rb:#1A1A1A;--rf:#FFFFFF}
+.role.owner.lg{font-size:12px;padding:5px 10px;display:inline-block}
 </style>
 </head>
 <body>
@@ -467,6 +470,7 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
       <div class="pop" id="rolePop" role="dialog" aria-label="Your account">
         <h4>Who can do what</h4>
         <dl>
+          <dt><span class="role owner">Owner</span></dt><dd>Developer. Full access. Admins can't change the owner's role or settings.</dd>
           <dt><span class="role admin">Admin</span></dt><dd>Add, edit, move and delete campaigns. Manages team roles.</dd>
           <dt><span class="role employee">Employee</span></dt><dd>Add, edit and move campaigns. Can't delete.</dd>
           <dt><span class="role viewer">Viewer</span></dt><dd>Sees everything, can't change anything.</dd>
@@ -638,8 +642,9 @@ const icon = (name,cls="ico") => { const c=ch(name); return c.img ? `<img class=
 const tag = name => { const c=ch(name); return `<span class="tag" style="--c:${c.c}">${icon(name)}${esc(name||"No channel")}</span>`; };
 const stat = s => `<span class="status" style="--s:${STATUSES[s]||"var(--ns)"}"><i class="dot"></i>${esc(s||"Not Started")}</span>`;
 const role = () => me ? me.role : "viewer";
-const canWrite = () => role()==="admin" || role()==="employee";
-const canDelete = () => role()==="admin";
+const isAdmin = () => role()==="owner" || role()==="admin";   // owner has every admin power
+const canWrite = () => isAdmin() || role()==="employee";
+const canDelete = () => isAdmin();
 
 const AVC=["#3D5AFE","#E8590C","#0CA678","#AE3EC9","#1098AD","#D6336C","#5C940D"];
 function avColor(id){let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))>>>0;return AVC[h%AVC.length];}
@@ -964,8 +969,8 @@ function renderTeam(){
   return `<div class="tablewrap team"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Show name on edits</th></tr></thead><tbody>
   ${people.map(p=>`<tr><td><span style="display:inline-flex;gap:8px;align-items:center"><span class="av sm" style="--avc:${avColor(p.id)}">${esc(initials(p.full_name||p.email))}</span><b>${esc(p.full_name||"")}</b>${p.id===me.id?' <span class="muted">(you)</span>':""}</span></td>
     <td class="muted">${esc(p.email||"")}</td>
-    <td><select data-role="${esc(p.id)}" ${p.id===me.id?"disabled title=\"Ask another admin to change your role\"":""}>${["admin","employee","viewer"].map(r=>`<option value="${r}" ${p.role===r?"selected":""}>${r[0].toUpperCase()+r.slice(1)}</option>`).join("")}</select></td>
-    <td><input type="checkbox" data-hide="${esc(p.id)}" ${p.hide_name?"":"checked"} aria-label="Show name on edits"></td></tr>`).join("")}
+    <td>${p.role==="owner"?`<span class="role owner lg" title="The owner's role can only be changed by the developer">Owner · Developer</span>`:`<select data-role="${esc(p.id)}" ${p.id===me.id?"disabled title=\"Ask another admin to change your role\"":""}>${["admin","employee","viewer"].map(r=>`<option value="${r}" ${p.role===r?"selected":""}>${r[0].toUpperCase()+r.slice(1)}</option>`).join("")}</select>`}</td>
+    <td><input type="checkbox" data-hide="${esc(p.id)}" ${p.hide_name?"":"checked"} aria-label="Show name on edits" ${p.role==="owner"&&role()!=="owner"?'disabled title="Only the owner can change this"':""}></td></tr>`).join("")}
   </tbody></table></div>
   <p class="hint">To add someone, invite their email in Supabase (Authentication → Users → Invite user). They'll appear here as a Viewer once they set a password.</p>`;
 }
@@ -983,8 +988,8 @@ function wireTeam(){
 /* ---------- render ---------- */
 function render(){
   document.body.classList.toggle("ro",!canWrite());
-  $("#teamTab").hidden = role()!=="admin";
-  if(view==="team" && role()!=="admin") view="board";
+  $("#teamTab").hidden = !isAdmin();
+  if(view==="team" && !isAdmin()) view="board";
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===view));
   renderFilters(); renderRole(); updateSearchNote();
   $("#searchBox").hidden = view==="team";
@@ -1003,7 +1008,7 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{vie
 
 function renderRole(){
   if(!me) return;
-  const label={admin:"Admin",employee:"Employee",viewer:"Viewer"}[role()];
+  const label={owner:"Owner",admin:"Admin",employee:"Employee",viewer:"Viewer"}[role()];
   const nm=me.full_name||me.email;
   $("#roleBtn").innerHTML=`<span class="av" style="--avc:${avColor(me.id)}">${esc(initials(nm))}</span><span>${esc(nm)}</span><span class="role ${role()}">${label}</span>`;
 }
