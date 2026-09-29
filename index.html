@@ -495,7 +495,7 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
     <div class="barright">
       <label class="search" id="searchBox">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.75"/><path d="M10.5 10.5l3.5 3.5"/></svg>
-        <input type="search" id="q" placeholder="Search influencer, asset, notes…" aria-label="Search campaigns" autocomplete="off">
+        <input type="search" id="q" placeholder="Search influencer, campaign, notes…" aria-label="Search campaigns" autocomplete="off">
         <kbd id="qHint">/</kbd>
         <button type="button" id="qClear" aria-label="Clear search" hidden>✕</button>
       </label>
@@ -521,7 +521,7 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
         </div>
       </div>
     </div>
-    <label class="f">Asset<input id="fAsset" placeholder="e.g. Fall recipe reel"></label>
+    <label class="f">Campaign Name<input id="fAsset" placeholder="Fall recipe reel"></label>
     <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Channel<div class="pickers" id="fChan"></div></div>
     <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Status<div class="pickers" id="fStat"></div></div>
     <div class="row2">
@@ -811,7 +811,7 @@ function wireCalendar(){
 /* ---------- table ---------- */
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
-  return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Asset</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
+  return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Campaign Name</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
   ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt)}</td><td>${stamp("",c.updatedBy,c.updatedAt)}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
