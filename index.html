@@ -414,6 +414,9 @@ button.viewtoggle:hover>span:not(.on){color:var(--ink)}
 
 .stampico{width:14px;height:14px;flex:none;color:var(--ink-3)}
 .stamps.big .stampico{width:15px;height:15px}
+
+.tdinf{display:flex;flex-direction:column;line-height:1.3}
+.tdinf span{font-size:12px;color:var(--ink-3)}
 </style>
 </head>
 <body>
@@ -623,6 +626,9 @@ const PLAY_ICON = `<svg class="lico" viewBox="0 0 16 16" fill="none" stroke="cur
 const PAW_ICON = `<svg class="lico" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><ellipse cx="4" cy="6.2" rx="1.45" ry="1.85"/><ellipse cx="7" cy="4.2" rx="1.45" ry="1.9"/><ellipse cx="10.4" cy="4.4" rx="1.45" ry="1.9"/><ellipse cx="13" cy="6.9" rx="1.35" ry="1.75"/><path d="M8.3 7.9c1.9 0 4.1 2.6 4.1 4.3 0 1.2-1 1.7-2 1.5-.8-.1-1.3-.5-2.1-.5s-1.4.4-2.2.5c-1 .2-2-.3-2-1.5 0-1.7 2.3-4.3 4.2-4.3z"/></svg>`;
 const infHandle = h => { h=String(h||"").trim(); return !h ? "" : (h.startsWith("@")||/^https?:/i.test(h) ? h : "@"+h); };
 const TRASH_ICON = '<svg class="btnico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5h11M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.6a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9l.7-8.6M6.8 7v4.5M9.2 7v4.5"/></svg>';
+// Handle first (falls back to name when there's no handle)
+const infH = c => { const i=influencers[c.influencerId]; return i&&i.handle?infHandle(i.handle):""; };
+const infPrimary = c => infH(c) || c.influencer || "Untitled";
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -708,9 +714,9 @@ const ICON_EXPAND=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 // Compact one-line card used in the Done column
 function miniCard(c,k){
   const post=safeUrl(c.postUrl), files=safeUrl(c.filesUrl);
-  return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
+  return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(infH(c)?infH(c)+" ("+c.influencer+")":c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
     <span class="miniico">${icon(c.channel)}</span>
-    <span class="minitxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></span>
+    <span class="minitxt"><b>${esc(infPrimary(c))}</b><span>${esc(c.asset||"")}</span></span>
     <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink post" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink files" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
   </div>`;
 }
@@ -722,7 +728,7 @@ function renderBoard(){
       <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><button type="button" class="viewtoggle" data-compact="${esc(s)}" aria-pressed="${compactCols.has(s)}" aria-label="Compact ${esc(s)} cards" title="${compactCols.has(s)?"Switch to full cards":"Switch to compact cards"}"><span class="${compactCols.has(s)?"":"on"}">${ICON_EXPAND}</span><span class="${compactCols.has(s)?"on":""}">${ICON_COMPACT}</span></button></span></div>
       ${col.map(c=>{const k=ch(c.channel); if(compactCols.has(s)) return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
         ${tag(c.channel)}
-        <div class="who">${esc(c.influencer||"Untitled")}${influencers[c.influencerId]&&influencers[c.influencerId].handle?` <span class="whoh">${esc(infHandle(influencers[c.influencerId].handle))}</span>`:""}</div>
+        <div class="who">${esc(infPrimary(c))}${infH(c)&&c.influencer?` <span class="whoh">${esc(c.influencer)}</span>`:""}</div>
         <div class="what">${esc(c.asset||"")}</div>
         <div class="when">${CAL_ICON}<span>${fmtRange(c.start,c.end)}</span></div>
         ${linkChips(c)}
@@ -776,7 +782,7 @@ function renderCalendar(){
       let lane=lanes.findIndex(end=>end<s);if(lane<0){lane=lanes.length;lanes.push(-1);}lanes[lane]=e;
       const k=ch(c.channel);
       const cls=[c.status==="Done"?"done":"",c.s<ws?"cont-l":"",c.e>we?"cont-r":""].join(" ");
-      cells+=`<button class="evt ${cls}" data-id="${esc(c.id)}" title="${esc(c.influencer)} · ${esc(c.asset)}" style="grid-column:${s+1} / ${e+2};grid-row:${lane+2};--c:${k.c};--cf:${k.f}"><span class="evtico">${icon(c.channel)}</span><span>${esc(c.influencer||"Untitled")} — ${esc(c.asset||"")}</span></button>`;
+      cells+=`<button class="evt ${cls}" data-id="${esc(c.id)}" title="${esc(infH(c)?infH(c)+" ("+c.influencer+")":c.influencer)} · ${esc(c.asset)}" style="grid-column:${s+1} / ${e+2};grid-row:${lane+2};--c:${k.c};--cf:${k.f}"><span class="evtico">${icon(c.channel)}</span><span>${esc(infPrimary(c))} — ${esc(c.asset||"")}</span></button>`;
     }
     html+=`<div class="week">${cells}</div>`;
   }
@@ -826,7 +832,7 @@ function wireCalendar(){
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
   return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Campaign Name</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
-  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt,"add")}</td><td>${stamp("",c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
+  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td>${(()=>{const h=influencers[c.influencerId]&&influencers[c.influencerId].handle;return h?`<div class="tdinf"><b>${esc(infHandle(h))}</b><span>${esc(c.influencer||"")}</span></div>`:`<b>${esc(c.influencer||"Untitled")}</b>`;})()}</td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt,"add")}</td><td>${stamp("",c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
 function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
@@ -899,14 +905,14 @@ $("#iDelete").onclick=async()=>{
 function setInfPick(id,fallbackName){
   draft.influencerId=id&&influencers[id]?id:null;
   const i=influencers[draft.influencerId], lbl=$("#infBtnLabel");
-  if(i){ lbl.innerHTML=`<span class="av sm" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><span class="pickname">${esc(i.name)}</span>${i.handle?`<span class="pickh">${esc(infHandle(i.handle))}</span>`:""}`; lbl.className=""; }
+  if(i){ lbl.innerHTML=`<span class="av sm" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span>${i.handle?`<span class="pickname">${esc(infHandle(i.handle))}</span><span class="pickh">${esc(i.name)}</span>`:`<span class="pickname">${esc(i.name)}</span>`}`; lbl.className=""; }
   else { lbl.textContent=fallbackName?`${fallbackName} (not in directory)`:"Choose an influencer"; lbl.className="ph"; }
 }
 function renderInfList(){
   const q=norm($("#infSearch").value.trim());
   const all=Object.values(influencers).sort((a,b)=>a.name.localeCompare(b.name));
   const list=all.filter(i=>!q||q.split(/\s+/).every(w=>norm([i.name,i.handle,(i.pets||[]).join(" ")].join(" ")).includes(w)));
-  $("#infList").innerHTML=list.length?list.map((i,n)=>`<button type="button" class="opt ${i.id===draft.influencerId?"sel":""}" role="option" aria-selected="${i.id===draft.influencerId}" data-pick="${esc(i.id)}"><span class="av sm" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><span class="opttxt"><b>${esc(i.name)}</b><span>${esc(infHandle(i.handle))}${i.pets&&i.pets.length?` · ${esc(i.pets.join(", "))}`:""}</span></span>${i.id===draft.influencerId?'<span class="optcheck">✓</span>':""}</button>`).join("")
+  $("#infList").innerHTML=list.length?list.map((i,n)=>`<button type="button" class="opt ${i.id===draft.influencerId?"sel":""}" role="option" aria-selected="${i.id===draft.influencerId}" data-pick="${esc(i.id)}"><span class="av sm" style="--avc:${avColor(i.id)}">${esc(initials(i.name))}</span><span class="opttxt"><b>${esc(i.handle?infHandle(i.handle):i.name)}</b><span>${esc(i.handle?i.name:"No handle yet")}${i.pets&&i.pets.length?` · ${esc(i.pets.join(", "))}`:""}</span></span>${i.id===draft.influencerId?'<span class="optcheck">✓</span>':""}</button>`).join("")
     : `<div class="optempty">${all.length?`No influencer matches “${esc($("#infSearch").value.trim())}”.`:"No influencers in the directory yet."}<br><button type="button" class="linkbtn" id="goDirectory">Add them in the Influencers tab</button></div>`;
   const g=$("#goDirectory"); if(g) g.onclick=()=>{ closeDrawer(); view="influencers"; render(); if(canWrite()) setTimeout(()=>openInfDrawer(null),150); };
 }
