@@ -243,6 +243,19 @@ td .stamp{white-space:nowrap}
 :root{--action:#4F0CE8;--action-hover:#420AC4}
 .btn.primary{background:var(--action);color:#fff;border-color:transparent}
 .btn.primary:hover{background:var(--action-hover);filter:none}
+
+/* links */
+.hintlbl{font-weight:500;color:var(--ink-3);margin-left:4px}
+.urlrow{display:flex;gap:8px;align-items:center}
+.urlrow input{flex:1;min-width:0}
+.openlink{flex:none;text-decoration:none;color:var(--ink)}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.lchip{display:inline-flex;align-items:center;gap:5px;font:700 11.5px/1 Nunito,"Open Sans",sans-serif;padding:6px 10px;border-radius:999px;text-decoration:none;border:1px solid var(--line);color:var(--ink-2);background:var(--surface)}
+.lchip:hover{border-color:var(--ink-3);color:var(--ink)}
+.lchip.post{color:#4F0CE8;border-color:#D9CCFB;background:#F4F0FE}
+.lchip.files{color:#0F5AA8;border-color:#CFE2F6;background:#EFF6FD}
+td .links{margin-top:0;flex-wrap:nowrap}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -341,6 +354,10 @@ td .stamp{white-space:nowrap}
       <label class="f">Start<input type="date" id="fStart"></label>
       <label class="f">End<input type="date" id="fEnd"></label>
     </div>
+    <label class="f"><span>Live Post <span class="hintlbl">· link to the influencer's post</span></span>
+      <div class="urlrow"><input type="url" id="fPost" placeholder="https://www.tiktok.com/@creator/video/…" inputmode="url"><a class="btn iconbtn openlink" id="fPostOpen" target="_blank" rel="noopener noreferrer" aria-label="Open live post" hidden>↗</a></div></label>
+    <label class="f"><span>Source Files <span class="hintlbl">· OneDrive folder or file</span></span>
+      <div class="urlrow"><input type="url" id="fFiles" placeholder="https://…sharepoint.com/… or onedrive.live.com/…" inputmode="url"><a class="btn iconbtn openlink" id="fFilesOpen" target="_blank" rel="noopener noreferrer" aria-label="Open source files" hidden>↗</a></div></label>
     <label class="f">Notes<textarea id="fNotes" placeholder="Anything the team should know"></textarea></label>
     <div class="edited" id="fEdited"></div>
     <div class="err" id="fErr"></div>
@@ -407,13 +424,20 @@ function stamp(label,id,ts){
   const n=nameOf(id);
   return `<div class="stamp" title="${esc(label)} ${n?"by "+esc(n)+" ":""}${esc(fullStamp(ts))}">${n?av(id,true):'<span class="av sm ghost"></span>'}<span>${label?`<b>${esc(label)}</b>${n?" by "+esc(n):""}`:(n?esc(n):"")}${ts?((label||n)?" · ":"")+esc(shortDate(ts)):""}</span></div>`;
 }
+// Only allow real web links (blocks "javascript:" and similar)
+function safeUrl(u){ try{ const x=new URL(String(u||"").trim()); return (x.protocol==="https:"||x.protocol==="http:")?x.href:null; }catch(e){ return null; } }
+function linkChips(c){
+  const post=safeUrl(c.postUrl), files=safeUrl(c.filesUrl);
+  if(!post&&!files) return "";
+  return `<div class="links">${post?`<a class="lchip post" href="${esc(post)}" target="_blank" rel="noopener noreferrer">▶ Live Post</a>`:""}${files?`<a class="lchip files" href="${esc(files)}" target="_blank" rel="noopener noreferrer">📁 Source Files</a>`:""}</div>`;
+}
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
 function setSync(on,text){ const s=$("#sync"); s.classList.toggle("on",on); s.querySelector("span").textContent=text; }
 function visible(){ return campaigns.filter(c => !chanFilter.size || chanFilter.has(c.channel)); }
 
 /* ---------- mapping between database rows and the page ---------- */
-const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at});
-const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||""});
+const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,postUrl:r.post_url||"",filesUrl:r.files_url||"",createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at});
+const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||"",post_url:c.postUrl||null,files_url:c.filesUrl||null});
 
 /* ---------- filters ---------- */
 function renderFilters(){
@@ -430,13 +454,14 @@ function renderBoard(){
     const col=items.filter(c=>(c.status||"Not Started")===s).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
     return `<section class="col" data-status="${esc(s)}">
       <div class="colhead">${stat(s)}<span class="count">${col.length}</span></div>
-      ${col.map(c=>{const k=ch(c.channel);return `<button class="card" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
+      ${col.map(c=>{const k=ch(c.channel);return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
         ${tag(c.channel)}
         <div class="who">${esc(c.influencer||"Untitled")}</div>
         <div class="what">${esc(c.asset||"")}</div>
         <div class="when">🗓 ${fmt(c.start)} → ${fmt(c.end)}</div>
+        ${linkChips(c)}
         <div class="stamps">${stamp("Created",c.createdBy,c.createdAt)}${(c.updatedAt&&c.createdAt&&Math.abs(new Date(c.updatedAt)-new Date(c.createdAt))>60000)?stamp("Edited",c.updatedBy,c.updatedAt):""}</div>
-      </button>`}).join("")}
+      </div>`}).join("")}
       <button class="addcard" data-add="${esc(s)}">＋ Add</button>
     </section>`;}).join("")}</div>`;
 }
@@ -445,7 +470,8 @@ function wireBoard(){
   document.querySelectorAll(".card").forEach(el=>{
     el.addEventListener("dragstart",e=>{if(!canWrite()){e.preventDefault();return;}dragId=el.dataset.id;el.classList.add("dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",dragId);});
     el.addEventListener("dragend",()=>el.classList.remove("dragging"));
-    el.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===el.dataset.id)));
+    el.addEventListener("click",e=>{ if(e.target.closest("a")) return; openDrawer(campaigns.find(c=>c.id===el.dataset.id)); });
+    el.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target===el){ e.preventDefault(); openDrawer(campaigns.find(c=>c.id===el.dataset.id)); } });
   });
   document.querySelectorAll(".col").forEach(col=>{
     col.addEventListener("dragover",e=>{e.preventDefault();col.classList.add("over");});
@@ -497,8 +523,8 @@ function wireCalendar(){
 /* ---------- table ---------- */
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
-  return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Asset</th><th>Status</th><th>Start</th><th>End</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
-  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmt(c.start)}</td><td>${fmt(c.end)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt)}</td><td>${stamp("",c.updatedBy,c.updatedAt)}</td></tr>`}).join("")}
+  return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Asset</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
+  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.influencer||"Untitled")}</b></td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmt(c.start)}</td><td>${fmt(c.end)}</td><td>${linkChips(c)}</td><td class="muted">${esc(c.notes||"")}</td><td>${stamp("",c.createdBy,c.createdAt)}</td><td>${stamp("",c.updatedBy,c.updatedAt)}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
 function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
@@ -565,6 +591,7 @@ function openDrawer(c,preset={}){
   $("#dTitle").textContent=ro?"Campaign":(c?"Edit campaign":"New campaign");
   $("#fInf").value=draft.influencer||"";$("#fAsset").value=draft.asset||"";
   $("#fStart").value=draft.start||"";$("#fEnd").value=draft.end||"";$("#fNotes").value=draft.notes||"";
+  $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
   document.querySelectorAll("#drawer input,#drawer textarea").forEach(el=>el.disabled=ro);
   $("#dSave").hidden=ro; $("#dCancel").textContent=ro?"Close":"Cancel";
   $("#dDelete").style.visibility=(c&&canDelete())?"visible":"hidden";
@@ -573,13 +600,19 @@ function openDrawer(c,preset={}){
   $("#drawer").classList.add("open");$("#scrim").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");
   if(!ro) setTimeout(()=>$("#fInf").focus(),50);
 }
+function syncOpenLinks(){
+  [["#fPost","#fPostOpen"],["#fFiles","#fFilesOpen"]].forEach(([i,a])=>{ const u=safeUrl($(i).value); const el=$(a); el.hidden=!u; if(u) el.href=u; });
+}
+["#fPost","#fFiles"].forEach(i=>$(i).addEventListener("input",syncOpenLinks));
 function closeDrawer(){$("#drawer").classList.remove("open");$("#scrim").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");}
 $("#dClose").onclick=closeDrawer;$("#dCancel").onclick=closeDrawer;$("#scrim").onclick=closeDrawer;
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
 $("#newBtn").onclick=()=>openDrawer(null);
 $("#dSave").onclick=async()=>{
   if(!canWrite())return;
-  const c={...draft,influencer:$("#fInf").value.trim(),asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim()};
+  const c={...draft,influencer:$("#fInf").value.trim(),asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim()};
+  if(c.postUrl&&!safeUrl(c.postUrl)){$("#fErr").textContent="Live Post link needs to be a full web address starting with https://";return;}
+  if(c.filesUrl&&!safeUrl(c.filesUrl)){$("#fErr").textContent="Source Files link needs to be a full web address starting with https://";return;}
   if(!c.influencer){$("#fErr").textContent="Add an influencer name to save.";return;}
   if(c.start&&c.end&&c.end<c.start){$("#fErr").textContent="End date needs to be on or after the start date.";return;}
   const ok=await saveCampaign(c,editing?"Saved":"Campaign added"); if(ok) closeDrawer();
