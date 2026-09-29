@@ -442,6 +442,13 @@ button.viewtoggle{position:relative}
 .card:not(.mini):hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(20,20,20,.06),0 8px 20px rgba(20,20,20,.08)}
 .card.mini:hover{transform:translateX(2px)}
 @media (prefers-reduced-motion:reduce){.viewtoggle .thumb,.card{transition:none}.card.cardin{animation:none}}
+
+/* sliding tab underline */
+.tabs{position:relative}
+.tab,.tab[aria-selected="true"]{border-bottom-color:transparent}
+.tab{transition:color .2s}
+.tabind{position:absolute;left:0;bottom:-1px;height:2px;width:0;border-radius:2px;background:var(--accent);opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.3,.9,.3,1),width .35s cubic-bezier(.3,.9,.3,1),opacity .2s}
+@media (prefers-reduced-motion:reduce){.tabind{transition:none}}
 </style>
 </head>
 <body>
@@ -515,7 +522,7 @@ button.viewtoggle{position:relative}
   </header>
 
   <div class="bar">
-    <div class="tabs" role="tablist">
+    <div class="tabs" role="tablist" id="tabs"><span class="tabind" id="tabInd" aria-hidden="true"></span>
       <button class="tab" role="tab" data-view="board" aria-selected="true">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2" width="3.5" height="12" rx="1"/><rect x="6.25" y="2" width="3.5" height="8" rx="1"/><rect x="11" y="2" width="3.5" height="10" rx="1"/></svg>Board</button>
       <button class="tab" role="tab" data-view="calendar" aria-selected="false">
@@ -619,7 +626,9 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let me = null;            // my profile row
 let profiles = {};        // id -> profile
 let campaigns = [];
-let view = "board", chanFilter = new Set();
+const VIEW_KEY="nhv-tracker-view", VIEWS=["board","calendar","table","influencers","archive","team"];
+// Reopen the tab you were last on (remembered per browser)
+let view = (()=>{ try{ const v=localStorage.getItem(VIEW_KEY); return VIEWS.includes(v)?v:"board"; }catch(e){ return "board"; } })(), chanFilter = new Set();
 let calMonth = (()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1)})();
 let editing = null, draft = {}, channelSub = null;
 let influencers = {};      // id -> {id,name,handle,pets,...}
@@ -1031,13 +1040,27 @@ function wireTeam(){
   }));
 }
 
+/* ---------- sliding tab underline ---------- */
+function moveTabIndicator(){
+  const ind=$("#tabInd"), t=document.querySelector('.tab[aria-selected="true"]');
+  if(!ind||!t||t.hidden||!t.offsetWidth){ if(ind) ind.style.opacity=0; return; }
+  const first=!ind.dataset.ready;
+  if(first) ind.style.transition="none";           // no slide on first load
+  ind.style.opacity=1;
+  ind.style.width=t.offsetWidth+"px";
+  ind.style.transform=`translateX(${t.offsetLeft}px)`;
+  if(first){ ind.offsetWidth; ind.style.transition=""; ind.dataset.ready="1"; }
+}
+window.addEventListener("resize",()=>{ const ind=$("#tabInd"); if(!ind) return; ind.style.transition="none"; moveTabIndicator(); ind.offsetWidth; ind.style.transition=""; });
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ const ind=$("#tabInd"); if(ind){ delete ind.dataset.ready; moveTabIndicator(); } });
+
 /* ---------- render ---------- */
 function render(){
   document.body.classList.toggle("ro",!canWrite());
   $("#teamTab").hidden = !isAdmin();
   if(view==="team" && !isAdmin()) view="board";
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===view));
-  renderFilters(); renderRole(); updateSearchNote();
+  renderFilters(); renderRole(); updateSearchNote(); moveTabIndicator();
   $("#searchBox").hidden = view==="team";
   const v=$("#view");
   const ac=campaigns.filter(c=>c.archivedAt).length; $("#archCount").textContent=ac?ac:"";
@@ -1050,7 +1073,7 @@ function render(){
   else if(view==="calendar"){v.innerHTML=renderCalendar();wireCalendar();}
   else{v.innerHTML=renderTable();wireTable();}
 }
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{view=t.dataset.view;render();}));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{view=t.dataset.view;try{localStorage.setItem(VIEW_KEY,view);}catch(e){}render();}));
 
 function renderRole(){
   if(!me) return;
