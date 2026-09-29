@@ -274,6 +274,33 @@ td .links{margin-top:0;flex-wrap:nowrap}
 .mpdot{position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
 .mpm.cur .mpdot{background:#fff}
 .mptoday{display:block;margin:12px auto 0}
+
+/* mini "Done" cards */
+.card.mini{display:flex;align-items:center;gap:9px;padding:8px 10px;margin-bottom:6px;border-left-width:3px;box-shadow:0 1px 2px rgba(20,20,20,.06)}
+.miniico{width:22px;height:22px;border-radius:50%;background:color-mix(in srgb,var(--c) 10%,#fff);display:grid;place-items:center;flex:none}
+.miniico .ico{width:13px;height:13px}
+.minitxt{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.minitxt b{font:700 13px Nunito,"Open Sans",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.minitxt span{font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.minimeta{display:flex;align-items:center;gap:4px;flex:none}
+.minilink{font-size:11px;text-decoration:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--ink-2)}
+.minilink:hover{background:var(--line)}
+.minidate{font-size:11px;color:var(--ink-3);font-weight:600;margin-left:2px}
+/* archive tab */
+.tabcount{font-size:11px;font-weight:800;background:var(--surface-2);color:var(--ink-2);border-radius:999px;padding:1px 7px;margin-left:2px}
+.tabcount:empty{display:none}
+.archlist{display:grid;gap:8px}
+.archrow{display:grid;grid-template-columns:minmax(220px,2fr) minmax(140px,1fr) minmax(150px,1.2fr) minmax(160px,1.2fr) auto;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:14px;padding:12px 16px}
+.archmain{display:flex;align-items:center;gap:12px;min-width:0;cursor:pointer}
+.archtxt{display:flex;flex-direction:column;min-width:0}
+.archtxt b{font-family:Nunito,"Open Sans",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.archtxt span{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.archdates{font-size:12px;color:var(--ink-3);line-height:1.8}
+.archlinks .links{margin-top:0}
+.archwho .stamp{margin:0}
+.archact{display:flex;gap:6px;justify-content:flex-end}
+.empty .muted{color:var(--ink-3);font-size:13px}
+@media (max-width:900px){.archrow{grid-template-columns:1fr auto}.archdates,.archlinks,.archwho{grid-column:1 / -1}.archact{grid-row:1;grid-column:2}}
 </style>
 </head>
 <body>
@@ -350,6 +377,8 @@ td .links{margin-top:0;flex-wrap:nowrap}
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="2"/><path d="M1.5 6.5h13M5 1v3M11 1v3"/></svg>Calendar</button>
       <button class="tab" role="tab" data-view="table" aria-selected="false">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 6h13M1.5 9.75h13M6 2.5v11"/></svg>Table</button>
+      <button class="tab" role="tab" data-view="archive" aria-selected="false">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"/><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"/></svg>Archive<span class="tabcount" id="archCount"></span></button>
       <button class="tab" role="tab" data-view="team" aria-selected="false" id="teamTab" hidden>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 14c.5-2.5 2.3-4 4.5-4s4 1.5 4.5 4"/><circle cx="11.5" cy="6" r="2"/><path d="M11 10c1.8 0 3.2 1.2 3.6 3.2"/></svg>Team</button>
     </div>
@@ -381,7 +410,7 @@ td .links{margin-top:0;flex-wrap:nowrap}
     <div class="err" id="fErr"></div>
   </div>
   <div class="dfoot">
-    <button class="btn danger" id="dDelete">Delete</button>
+    <div style="display:flex;gap:8px"><button class="btn" id="dArchive">Archive</button><button class="btn danger" id="dDelete">Delete</button></div>
     <div style="display:flex;gap:8px"><button class="btn" id="dCancel">Cancel</button><button class="btn primary" id="dSave">Save</button></div>
   </div>
 </aside>
@@ -451,10 +480,12 @@ function linkChips(c){
 }
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
 function setSync(on,text){ const s=$("#sync"); s.classList.toggle("on",on); s.querySelector("span").textContent=text; }
-function visible(){ return campaigns.filter(c => !chanFilter.size || chanFilter.has(c.channel)); }
+const byChan = c => !chanFilter.size || chanFilter.has(c.channel);
+function visible(){ return campaigns.filter(c => !c.archivedAt && byChan(c)); }   // board, calendar, table
+function archivedList(){ return campaigns.filter(c => c.archivedAt && byChan(c)).sort((a,b)=>new Date(b.archivedAt)-new Date(a.archivedAt)); }
 
 /* ---------- mapping between database rows and the page ---------- */
-const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,postUrl:r.post_url||"",filesUrl:r.files_url||"",createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at});
+const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,postUrl:r.post_url||"",filesUrl:r.files_url||"",createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at,archivedAt:r.archived_at||null,archivedBy:r.archived_by||null});
 const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||"",post_url:c.postUrl||null,files_url:c.filesUrl||null});
 
 /* ---------- filters ---------- */
@@ -466,13 +497,22 @@ function renderFilters(){
 $("#filters").addEventListener("click",e=>{const b=e.target.closest(".chipf");if(!b)return;const k=b.dataset.ch;chanFilter.has(k)?chanFilter.delete(k):chanFilter.add(k);render();});
 
 /* ---------- board ---------- */
+// Compact one-line card used in the Done column
+function miniCard(c,k){
+  const post=safeUrl(c.postUrl), files=safeUrl(c.filesUrl);
+  return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
+    <span class="miniico">${icon(c.channel)}</span>
+    <span class="minitxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></span>
+    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Live Post" aria-label="Open live post">▶</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink" title="Source Files" aria-label="Open source files">📁</a>`:""}<span class="minidate">${esc(fmt(c.end))}</span></span>
+  </div>`;
+}
 function renderBoard(){
   const items=visible();
   return `<div class="board">${Object.keys(STATUSES).map(s=>{
     const col=items.filter(c=>(c.status||"Not Started")===s).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
     return `<section class="col" data-status="${esc(s)}">
       <div class="colhead">${stat(s)}<span class="count">${col.length}</span></div>
-      ${col.map(c=>{const k=ch(c.channel);return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
+      ${col.map(c=>{const k=ch(c.channel); if(s==="Done") return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
         ${tag(c.channel)}
         <div class="who">${esc(c.influencer||"Untitled")}</div>
         <div class="what">${esc(c.asset||"")}</div>
@@ -580,6 +620,29 @@ function renderTable(){
 }
 function wireTable(){document.querySelectorAll("tbody tr[data-id]").forEach(r=>r.addEventListener("click",()=>openDrawer(campaigns.find(c=>c.id===r.dataset.id))));}
 
+/* ---------- archive ---------- */
+function renderArchive(){
+  const items=archivedList();
+  if(!items.length) return `<div class="empty">Nothing archived${chanFilter.size?" for these channels":""} yet.<br><span class="muted">Open any campaign and choose <b>Archive</b> to move it here. You can restore it any time.</span></div>`;
+  return `<div class="archlist">${items.map(c=>{const k=ch(c.channel);return `<div class="archrow" data-id="${esc(c.id)}" style="--c:${k.c}">
+    <div class="archmain" role="button" tabindex="0">${tag(c.channel)}<div class="archtxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></div></div>
+    <div class="archdates">🗓 ${fmt(c.start)} → ${fmt(c.end)}<br>${stat(c.status)}</div>
+    <div class="archlinks">${linkChips(c)}</div>
+    <div class="archwho">${stamp("Archived",c.archivedBy,c.archivedAt)}</div>
+    <div class="archact">${canWrite()?`<button class="btn" data-restore="${esc(c.id)}">↩ Restore</button>`:""}${canDelete()?`<button class="btn danger iconbtn" data-del="${esc(c.id)}" aria-label="Delete permanently" title="Delete permanently">🗑</button>`:""}</div>
+  </div>`;}).join("")}</div>`;
+}
+function wireArchive(){
+  document.querySelectorAll(".archmain").forEach(el=>{
+    const open=()=>openDrawer(campaigns.find(c=>c.id===el.closest(".archrow").dataset.id));
+    el.addEventListener("click",open); el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();open();}});
+  });
+  document.querySelectorAll("[data-restore]").forEach(b=>b.addEventListener("click",()=>setArchived(b.dataset.restore,false)));
+  document.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",async()=>{
+    const c=campaigns.find(x=>x.id===b.dataset.del); if(c&&confirm(`Permanently delete "${c.influencer} — ${c.asset}"? This can't be undone.`)) deleteCampaign(c.id);
+  }));
+}
+
 /* ---------- team (admins only) ---------- */
 function renderTeam(){
   const people=Object.values(profiles).sort((a,b)=>(a.full_name||a.email||"").localeCompare(b.full_name||b.email||""));
@@ -610,8 +673,10 @@ function render(){
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===view));
   renderFilters(); renderRole();
   const v=$("#view");
+  const ac=campaigns.filter(c=>c.archivedAt).length; $("#archCount").textContent=ac?ac:"";
   if(view==="team"){v.innerHTML=renderTeam();wireTeam();return;}
-  if(!campaigns.length&&view!=="calendar"){v.innerHTML=`<div class="empty">${canWrite()?`No campaigns yet. Add your first one to see it on the board and calendar.<br><br><button class="btn primary" id="emptyNew">＋ New campaign</button>`:"No campaigns yet."}</div>`;const b=$("#emptyNew");if(b)b.onclick=()=>openDrawer(null);return;}
+  if(view==="archive"){v.innerHTML=renderArchive();wireArchive();return;}
+  if(!campaigns.some(c=>!c.archivedAt)&&view!=="calendar"){v.innerHTML=`<div class="empty">${canWrite()?`No campaigns yet. Add your first one to see it on the board and calendar.<br><br><button class="btn primary" id="emptyNew">＋ New campaign</button>`:"No campaigns yet."}</div>`;const b=$("#emptyNew");if(b)b.onclick=()=>openDrawer(null);return;}
   if(view==="board"){v.innerHTML=renderBoard();wireBoard();}
   else if(view==="calendar"){v.innerHTML=renderCalendar();wireCalendar();}
   else{v.innerHTML=renderTable();wireTable();}
@@ -645,7 +710,10 @@ function openDrawer(c,preset={}){
   $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
   document.querySelectorAll("#drawer input,#drawer textarea").forEach(el=>el.disabled=ro);
   $("#dSave").hidden=ro; $("#dCancel").textContent=ro?"Close":"Cancel";
-  $("#dDelete").style.visibility=(c&&canDelete())?"visible":"hidden";
+  $("#dDelete").hidden=!(c&&canDelete());
+  $("#dArchive").hidden=!(c&&canWrite());
+  if(c){ $("#dArchive").textContent=c.archivedAt?"↩ Restore":"🗄 Archive"; }
+  $("#dTitle").textContent=(c&&c.archivedAt)?"Archived campaign":$("#dTitle").textContent;
   $("#fEdited").innerHTML=c?`<div class="stamps big">${stamp("Created",c.createdBy,c.createdAt)}${stamp("Last edited",c.updatedBy,c.updatedAt)}</div>`:"";
   $("#fErr").textContent=""; pickers();
   $("#drawer").classList.add("open");$("#scrim").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");
@@ -668,6 +736,7 @@ $("#dSave").onclick=async()=>{
   if(c.start&&c.end&&c.end<c.start){$("#fErr").textContent="End date needs to be on or after the start date.";return;}
   const ok=await saveCampaign(c,editing?"Saved":"Campaign added"); if(ok) closeDrawer();
 };
+$("#dArchive").onclick=async()=>{ if(editing&&canWrite()){ if(await setArchived(editing.id,!editing.archivedAt)) closeDrawer(); } };
 $("#dDelete").onclick=async()=>{ if(editing&&canDelete()&&confirm(`Delete "${editing.influencer} — ${editing.asset}"?`)){ if(await deleteCampaign(editing.id)) closeDrawer(); } };
 
 /* ---------- data ---------- */
@@ -679,6 +748,13 @@ async function saveCampaign(c,msg){
   const row=fromRow(data[0]); const i=campaigns.findIndex(x=>x.id===row.id);
   if(i>=0)campaigns[i]=row;else campaigns.push(row);
   render(); toast(msg); return true;
+}
+async function setArchived(id,on){
+  if(!canWrite())return false;
+  const {data,error}=await sb.from("campaigns").update({archived_at:on?new Date().toISOString():null}).eq("id",id).select();
+  if(error||!data||!data.length){toast(error?("Couldn't update: "+error.message):"You don't have permission to change this.");return false;}
+  const row=fromRow(data[0]); const i=campaigns.findIndex(x=>x.id===row.id); if(i>=0)campaigns[i]=row;
+  render(); toast(on?"Archived. Find it in the Archive tab.":"Restored to the board"); return true;
 }
 async function deleteCampaign(id){
   if(!canDelete())return false;
