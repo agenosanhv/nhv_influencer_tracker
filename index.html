@@ -273,7 +273,8 @@ td .links{margin-top:0;flex-wrap:nowrap}
 .mpm.cur{background:var(--action,#4F0CE8);border-color:transparent;color:#fff}
 .mpdot{position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent)}
 .mpm.cur .mpdot{background:#fff}
-.mptoday{display:block;margin:12px auto 0}
+.mptoday{display:flex;justify-content:center;width:100%;margin-top:12px;border-color:var(--accent);color:var(--accent);font-weight:700}
+.mptoday:hover{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
 
 /* mini "Done" cards */
 .card.mini{display:flex;align-items:center;gap:9px;padding:8px 10px;margin-bottom:6px;border-left-width:3px;box-shadow:0 1px 2px rgba(20,20,20,.06)}
@@ -315,6 +316,13 @@ td .links{margin-top:0;flex-wrap:nowrap}
 
 .lico{width:12px;height:12px;flex:none}
 .minilink .lico{width:11px;height:11px}
+
+.colctl{display:flex;align-items:center;gap:8px}
+.viewtoggle{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
+.viewtoggle button{width:24px;height:22px;border:0;background:none;border-radius:999px;display:grid;place-items:center;color:var(--ink-3);padding:0}
+.viewtoggle button svg{width:13px;height:13px}
+.viewtoggle button:hover{color:var(--ink)}
+.viewtoggle button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
 </style>
 </head>
 <body>
@@ -532,6 +540,17 @@ function renderFilters(){
 $("#filters").addEventListener("click",e=>{const b=e.target.closest(".chipf");if(!b)return;const k=b.dataset.ch;chanFilter.has(k)?chanFilter.delete(k):chanFilter.add(k);render();});
 
 /* ---------- board ---------- */
+// Which columns show compact cards. "Done" starts compact; each person's choice is remembered on their device.
+const COMPACT_KEY="nhv-tracker-compact-cols";
+let compactCols=new Set(["Done"]);
+try{ const saved=JSON.parse(localStorage.getItem(COMPACT_KEY)); if(Array.isArray(saved)) compactCols=new Set(saved); }catch(e){}
+function toggleCompact(st){
+  compactCols.has(st)?compactCols.delete(st):compactCols.add(st);
+  try{ localStorage.setItem(COMPACT_KEY,JSON.stringify([...compactCols])); }catch(e){}
+  render();
+}
+const ICON_COMPACT=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg>`;
+const ICON_EXPAND=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="4.5" rx="1"/><rect x="2.5" y="9" width="11" height="4.5" rx="1"/></svg>`;
 // Compact one-line card used in the Done column
 function miniCard(c,k){
   const post=safeUrl(c.postUrl), files=safeUrl(c.filesUrl);
@@ -546,8 +565,8 @@ function renderBoard(){
   return `<div class="board">${Object.keys(STATUSES).map(s=>{
     const col=items.filter(c=>(c.status||"Not Started")===s).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
     return `<section class="col" data-status="${esc(s)}">
-      <div class="colhead">${stat(s)}<span class="count">${col.length}</span></div>
-      ${col.map(c=>{const k=ch(c.channel); if(s==="Done") return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
+      <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><span class="viewtoggle" role="group" aria-label="${esc(s)} card size"><button type="button" data-compact="${esc(s)}" data-mode="full" aria-pressed="${!compactCols.has(s)}" title="Expanded cards">${ICON_EXPAND}</button><button type="button" data-compact="${esc(s)}" data-mode="mini" aria-pressed="${compactCols.has(s)}" title="Compact cards">${ICON_COMPACT}</button></span></span></div>
+      ${col.map(c=>{const k=ch(c.channel); if(compactCols.has(s)) return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
         ${tag(c.channel)}
         <div class="who">${esc(c.influencer||"Untitled")}</div>
         <div class="what">${esc(c.asset||"")}</div>
@@ -559,6 +578,10 @@ function renderBoard(){
     </section>`;}).join("")}</div>`;
 }
 function wireBoard(){
+  document.querySelectorAll("[data-compact]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation(); const st=b.dataset.compact, wantMini=b.dataset.mode==="mini";
+    if(wantMini!==compactCols.has(st)) toggleCompact(st);
+  }));
   let dragId=null;
   document.querySelectorAll(".card").forEach(el=>{
     el.addEventListener("dragstart",e=>{if(!canWrite()){e.preventDefault();return;}dragId=el.dataset.id;el.classList.add("dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",dragId);});
@@ -620,7 +643,7 @@ function renderMonthPicker(){
       const today=now.getFullYear()===mpYear&&now.getMonth()===i;
       const has=busy.has(`${mpYear}-${String(i+1).padStart(2,"0")}`);
       return `<button class="mpm ${cur?"cur":""} ${today?"today":""}" data-m="${i}">${esc(mn)}${has?'<i class="mpdot"></i>':""}</button>`;}).join("")}</div>
-    <button class="linkbtn mptoday" data-today="1">Jump to this month</button>`;
+    <button class="btn mptoday" data-today="1">Jump to this month</button>`;
 }
 function toggleMonthPicker(open){
   const mp=$("#mp"), b=$("#mpBtn"); if(!mp) return;
