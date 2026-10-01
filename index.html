@@ -601,9 +601,11 @@ select.fselect:focus{outline:none;border-color:var(--action,#4F0CE8)}
 select.fselect:disabled{cursor:default;opacity:.85}
 .mtpill{display:inline-flex;align-items:center;font:800 11.5px/1 Nunito,"Open Sans",sans-serif;padding:5px 10px;border-radius:999px;border:1px solid transparent}
 .mtpill.paid{background:#F4F0FE;color:#4F0CE8;border-color:#D9CCFB}
-.mtpill.standard{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
+.mtpill.custom{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
 .mtpill.other{background:var(--bg);color:var(--ink-3);border-color:var(--line)}
 .adsetlink:has(.mtpill){padding:3px 6px;margin-left:-6px;text-decoration:none!important}
+
+.fsect .row2{align-items:start}
 </style>
 </head>
 <body>
@@ -736,7 +738,7 @@ select.fselect:disabled{cursor:default;opacity:.85}
     <div class="fsect">
       <p class="fsecth">Ads</p>
       <div class="row2">
-        <label class="f">Monetary tag<select id="fTag" class="fselect"><option value="">Choose…</option><option value="Paid">Paid</option><option value="Standard">Standard</option></select></label>
+        <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)"><label for="fTag">Monetary tag</label><select id="fTag" class="fselect"><option value="">Choose…</option><option value="Paid">Paid</option><option value="__custom">Custom</option></select><input id="fTagCustom" placeholder="Type a custom tag" autocomplete="off" hidden aria-label="Custom monetary tag" style="border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 11px;font-weight:500;color:var(--ink)"></div>
         <label class="f">Ad set name<input id="fAdset" placeholder="e.g. Dog owners 25–44" autocomplete="off"></label>
       </div>
     </div>
@@ -852,7 +854,7 @@ function perfStrip(c){
   if(!hasPerf(c)) return "";
   return `<div class="perf" title="Last 30 days"><span><b>${money(c.spend)}</b>spent</span><span><b>${num(c.lpv)}</b>LPV</span><span><b>${num(c.conv)}</b>conv.</span><span><b>${money(cplpvOf(c))}</b>/LPV</span></div>`;
 }
-const moneyTagPill = t => `<span class="mtpill ${t==="Paid"?"paid":t==="Standard"?"standard":"other"}">${t==="Paid"?"$ ":""}${esc(t)}</span>`;
+const moneyTagPill = t => `<span class="mtpill ${t==="Paid"?"paid":"custom"}">${t==="Paid"?"$ ":""}${esc(t)}</span>`;
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -1465,10 +1467,10 @@ function openDrawer(c,preset={}){
   $("#fAsset").value=draft.asset||"";
   $("#fStart").value=draft.start||"";$("#fEnd").value=draft.end||"";$("#fNotes").value=draft.notes||"";
   $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
-  // keep any older free-text tag visible until someone picks Paid or Standard
-  const tagSel=$("#fTag"); tagSel.querySelectorAll("option.legacy").forEach(o=>o.remove());
-  if(draft.moneyTag&&!["Paid","Standard"].includes(draft.moneyTag)){ const o=document.createElement("option"); o.value=draft.moneyTag; o.textContent=draft.moneyTag+" (old)"; o.className="legacy"; tagSel.appendChild(o); }
-  tagSel.value=draft.moneyTag||""; $("#fAdset").value=draft.adset||"";
+  // Paid, or Custom with its own text (any non-"Paid" tag is treated as custom)
+  const tagSel=$("#fTag"), tagTxt=$("#fTagCustom"), mt=draft.moneyTag||"";
+  tagSel.value=!mt?"":(mt==="Paid"?"Paid":"__custom"); tagTxt.value=(mt&&mt!=="Paid")?mt:""; tagTxt.hidden=tagSel.value!=="__custom";
+  tagTxt.disabled=!canWrite(); tagSel.disabled=!canWrite(); $("#fAdset").value=draft.adset||"";
   const nv=x=>(x===null||x===undefined)?"":String(x);
 
   $("#perfSect").hidden=!c;   // performance + review only when editing an existing campaign
@@ -1502,6 +1504,7 @@ function syncCplpvHint(){ return;
   $("#fCplpv").placeholder=(sp>0&&lp>0)?(Math.round(sp/lp*100)/100).toFixed(2)+" (auto)":"0.00";
 }
 
+$("#fTag").addEventListener("change",()=>{ const custom=$("#fTag").value==="__custom"; $("#fTagCustom").hidden=!custom; if(custom) setTimeout(()=>$("#fTagCustom").focus(),0); });
 function closeDrawer(){
   ["#drawer","#idrawer"].forEach(d=>{$(d).classList.remove("open");$(d).setAttribute("aria-hidden","true");});
   $("#scrim").classList.remove("open"); closeInfPanel();
@@ -1542,7 +1545,7 @@ $("#dSave").onclick=async()=>{
   if(!canWrite())return;
   const pickedInf=influencers[draft.influencerId];
   if(!pickedInf){$("#fErr").textContent=Object.keys(influencers).length?"Choose an influencer from the list.":"Add the influencer in the Influencers tab first, then choose them here.";return;}
-  const c={...draft,influencer:pickedInf.name,influencerId:pickedInf.id,asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim(),moneyTag:$("#fTag").value.trim(),adset:$("#fAdset").value.trim()};
+  const c={...draft,influencer:pickedInf.name,influencerId:pickedInf.id,asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim(),moneyTag:($("#fTag").value==="__custom"?$("#fTagCustom").value.trim():$("#fTag").value),adset:$("#fAdset").value.trim()};
   if(false){
     const nums={spend:["#fSpend","Money spent",true],lpv:["#fLpv","Landing page views",false],conv:["#fConv","Conversions",false],cplpv:["#fCplpv","Cost per landing page view",true]};
     for(const [k,[sel,label,dec]] of Object.entries(nums)){
