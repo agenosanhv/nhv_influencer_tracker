@@ -606,6 +606,9 @@ select.fselect:disabled{cursor:default;opacity:.85}
 .adsetlink:has(.mtpill){padding:3px 6px;margin-left:-6px;text-decoration:none!important}
 
 .fsect .row2{align-items:start}
+
+.mtpill.standard{background:#EDF6DC;color:#217C01;border-color:#CFE6A8}
+.mtpill.custom{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
 </style>
 </head>
 <body>
@@ -738,7 +741,7 @@ select.fselect:disabled{cursor:default;opacity:.85}
     <div class="fsect">
       <p class="fsecth">Ads</p>
       <div class="row2">
-        <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)"><label for="fTag">Monetary tag</label><select id="fTag" class="fselect"><option value="">Choose…</option><option value="Paid">Paid</option><option value="__custom">Custom</option></select><input id="fTagCustom" placeholder="Type a custom tag" autocomplete="off" hidden aria-label="Custom monetary tag" style="border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 11px;font-weight:500;color:var(--ink)"></div>
+        <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)"><label for="fTag">Monetary tag</label><select id="fTag" class="fselect"><option value="">Choose…</option><option value="Paid">Paid</option><option value="Standard">Standard</option><option value="__custom">Custom</option></select><input id="fTagCustom" placeholder="Type a custom tag" autocomplete="off" hidden aria-label="Custom monetary tag" style="border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 11px;font-weight:500;color:var(--ink)"></div>
         <label class="f">Ad set name<input id="fAdset" placeholder="e.g. Dog owners 25–44" autocomplete="off"></label>
       </div>
     </div>
@@ -854,7 +857,7 @@ function perfStrip(c){
   if(!hasPerf(c)) return "";
   return `<div class="perf" title="Last 30 days"><span><b>${money(c.spend)}</b>spent</span><span><b>${num(c.lpv)}</b>LPV</span><span><b>${num(c.conv)}</b>conv.</span><span><b>${money(cplpvOf(c))}</b>/LPV</span></div>`;
 }
-const moneyTagPill = t => `<span class="mtpill ${t==="Paid"?"paid":"custom"}">${t==="Paid"?"$ ":""}${esc(t)}</span>`;
+const moneyTagPill = t => `<span class="mtpill ${t==="Paid"?"paid":t==="Standard"?"standard":"custom"}">${t==="Paid"?"$ ":""}${esc(t)}</span>`;
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -1469,7 +1472,8 @@ function openDrawer(c,preset={}){
   $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
   // Paid, or Custom with its own text (any non-"Paid" tag is treated as custom)
   const tagSel=$("#fTag"), tagTxt=$("#fTagCustom"), mt=draft.moneyTag||"";
-  tagSel.value=!mt?"":(mt==="Paid"?"Paid":"__custom"); tagTxt.value=(mt&&mt!=="Paid")?mt:""; tagTxt.hidden=tagSel.value!=="__custom";
+  const fixed=["Paid","Standard"].includes(mt);
+  tagSel.value=!mt?"":(fixed?mt:"__custom"); tagTxt.value=(mt&&!fixed)?mt:""; tagTxt.hidden=tagSel.value!=="__custom";
   tagTxt.disabled=!canWrite(); tagSel.disabled=!canWrite(); $("#fAdset").value=draft.adset||"";
   const nv=x=>(x===null||x===undefined)?"":String(x);
 
