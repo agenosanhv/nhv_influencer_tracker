@@ -592,6 +592,18 @@ input.min.bad{border-color:#E8A1AC;background:#FCE8EA}
 .adsetlink.empty{color:var(--ink-3);font-size:12.5px}
 .adsetlink.empty:hover{color:var(--action,#4F0CE8)}
 .adsettxt{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+
+.metrics td.mtag{white-space:nowrap;max-width:180px}
+.metrics td.mtag .adsetlink{max-width:170px}
+
+select.fselect{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%238F8B86' stroke-width='1.8'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E") no-repeat right 11px center/12px;border-radius:8px;padding:9px 32px 9px 11px;font-weight:500;color:var(--ink);width:100%;cursor:pointer}
+select.fselect:focus{outline:none;border-color:var(--action,#4F0CE8)}
+select.fselect:disabled{cursor:default;opacity:.85}
+.mtpill{display:inline-flex;align-items:center;font:800 11.5px/1 Nunito,"Open Sans",sans-serif;padding:5px 10px;border-radius:999px;border:1px solid transparent}
+.mtpill.paid{background:#F4F0FE;color:#4F0CE8;border-color:#D9CCFB}
+.mtpill.standard{background:var(--surface-2);color:var(--ink-2);border-color:var(--line)}
+.mtpill.other{background:var(--bg);color:var(--ink-3);border-color:var(--line)}
+.adsetlink:has(.mtpill){padding:3px 6px;margin-left:-6px;text-decoration:none!important}
 </style>
 </head>
 <body>
@@ -724,7 +736,7 @@ input.min.bad{border-color:#E8A1AC;background:#FCE8EA}
     <div class="fsect">
       <p class="fsecth">Ads</p>
       <div class="row2">
-        <label class="f">Monetary tag<input id="fTag" placeholder="e.g. NHV-Q4-TT-01" autocomplete="off"></label>
+        <label class="f">Monetary tag<select id="fTag" class="fselect"><option value="">Choose…</option><option value="Paid">Paid</option><option value="Standard">Standard</option></select></label>
         <label class="f">Ad set name<input id="fAdset" placeholder="e.g. Dog owners 25–44" autocomplete="off"></label>
       </div>
     </div>
@@ -840,6 +852,7 @@ function perfStrip(c){
   if(!hasPerf(c)) return "";
   return `<div class="perf" title="Last 30 days"><span><b>${money(c.spend)}</b>spent</span><span><b>${num(c.lpv)}</b>LPV</span><span><b>${num(c.conv)}</b>conv.</span><span><b>${money(cplpvOf(c))}</b>/LPV</span></div>`;
 }
+const moneyTagPill = t => `<span class="mtpill ${t==="Paid"?"paid":t==="Standard"?"standard":"other"}">${t==="Paid"?"$ ":""}${esc(t)}</span>`;
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -1240,20 +1253,24 @@ function renderMetrics(){
     return d.type==="money"?`<div class="maffix"><span>$</span>${inp}</div>`:inp; };
   const tot=items.reduce((t,c)=>{ if(c.spend!=null) t.spend+=Number(c.spend); if(c.lpv!=null) t.lpv+=Number(c.lpv); if(c.conv!=null) t.conv+=Number(c.conv); return t; },{spend:0,lpv:0,conv:0});
   return `<p class="mhint">${ro?"Results for the last 30 days.":"Click any cell to type. Changes save automatically when you press Enter or click away. <b>Cost per LPV</b> is worked out for you."}</p>
-  <div class="tablewrap"><table class="metrics"><thead><tr><th>Influencer</th><th>Campaign</th><th class="madset">Ad set name</th><th class="num">Money spent</th><th class="num">LPV</th><th class="num">Conv.</th><th class="num">Cost / LPV</th><th>Updated</th></tr></thead><tbody>
+  <div class="tablewrap"><table class="metrics"><thead><tr><th>Influencer</th><th>Campaign</th><th class="mtag">Monetary tag</th><th class="madset">Ad set name</th><th class="num">Money spent</th><th class="num">LPV</th><th class="num">Conv.</th><th class="num">Cost / LPV</th><th>Updated</th></tr></thead><tbody>
   ${items.map(c=>`<tr class="mrow" data-id="${esc(c.id)}">
     <td><div class="tdinf"><b>${esc(infPrimary(c))}</b>${infH(c)&&c.influencer?`<span>${esc(c.influencer)}</span>`:""}</div></td>
     <td><div class="mcamp"><span class="mico">${icon(c.channel)}</span><span>${esc(c.asset||"Untitled")}</span></div></td>
+    <td class="mtag">${canWrite()
+      ?`<button type="button" class="adsetlink ${c.moneyTag?"":"empty"}" data-edittag="${esc(c.id)}" title="Edit in campaign">${c.moneyTag?moneyTagPill(c.moneyTag):"Add tag"}</button>`
+      :(c.moneyTag?moneyTagPill(c.moneyTag):'<span class="muted">—</span>')}</td>
     <td class="madset">${canWrite()
       ?`<button type="button" class="adsetlink ${c.adset?"":"empty"}" data-editadset="${esc(c.id)}" title="Edit in campaign">${c.adset?esc(c.adset):"Add ad set name"}</button>`
       :(c.adset?`<span class="adsettxt">${esc(c.adset)}</span>`:'<span class="muted">—</span>')}</td>
     <td class="num">${cell(c,"spend","0.00")}</td><td class="num">${cell(c,"lpv","0")}</td><td class="num">${cell(c,"conv","0")}</td><td class="num mcalc">${cplpvOf(c)!=null?money(cplpvOf(c)):'<span class="muted">—</span>'}</td>
     <td class="mupd">${c.metricsAt?esc(shortDate(c.metricsAt)):'<span class="muted">—</span>'}</td>
   </tr>`).join("")}
-  </tbody><tfoot><tr><td colspan="3"><b>Total</b> <span class="muted">· ${items.length} campaign${items.length===1?"":"s"}</span></td><td class="num"><b>${money(tot.spend)}</b></td><td class="num"><b>${num(tot.lpv)}</b></td><td class="num"><b>${num(tot.conv)}</b></td><td class="num"><b>${tot.lpv?money(Math.round(tot.spend/tot.lpv*100)/100):"—"}</b></td><td></td></tr></tfoot></table></div>`;
+  </tbody><tfoot><tr><td colspan="4"><b>Total</b> <span class="muted">· ${items.length} campaign${items.length===1?"":"s"}</span></td><td class="num"><b>${money(tot.spend)}</b></td><td class="num"><b>${num(tot.lpv)}</b></td><td class="num"><b>${num(tot.conv)}</b></td><td class="num"><b>${tot.lpv?money(Math.round(tot.spend/tot.lpv*100)/100):"—"}</b></td><td></td></tr></tfoot></table></div>`;
 }
 function wireMetrics(){
   // Ad set name comes from the campaign itself; clicking it opens the campaign with that field ready
+  document.querySelectorAll("[data-edittag]").forEach(b=>b.onclick=()=>{ const c=campaigns.find(x=>x.id===b.dataset.edittag); if(!c) return; openDrawer(c); setTimeout(()=>{ const f=$("#fTag"); if(f){ f.scrollIntoView({block:"center"}); f.focus(); } },150); });
   document.querySelectorAll("[data-editadset]").forEach(b=>b.onclick=()=>{ const c=campaigns.find(x=>x.id===b.dataset.editadset); if(!c) return; openDrawer(c); setTimeout(()=>{ const f=$("#fAdset"); if(f){ f.scrollIntoView({block:"center"}); f.focus(); } },150); });
   const tbl=document.querySelector(".metrics"); if(!tbl) return;
   tbl.querySelectorAll("input.min").forEach(inp=>{
@@ -1448,7 +1465,10 @@ function openDrawer(c,preset={}){
   $("#fAsset").value=draft.asset||"";
   $("#fStart").value=draft.start||"";$("#fEnd").value=draft.end||"";$("#fNotes").value=draft.notes||"";
   $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
-  $("#fTag").value=draft.moneyTag||""; $("#fAdset").value=draft.adset||"";
+  // keep any older free-text tag visible until someone picks Paid or Standard
+  const tagSel=$("#fTag"); tagSel.querySelectorAll("option.legacy").forEach(o=>o.remove());
+  if(draft.moneyTag&&!["Paid","Standard"].includes(draft.moneyTag)){ const o=document.createElement("option"); o.value=draft.moneyTag; o.textContent=draft.moneyTag+" (old)"; o.className="legacy"; tagSel.appendChild(o); }
+  tagSel.value=draft.moneyTag||""; $("#fAdset").value=draft.adset||"";
   const nv=x=>(x===null||x===undefined)?"":String(x);
 
   $("#perfSect").hidden=!c;   // performance + review only when editing an existing campaign
