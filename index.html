@@ -459,8 +459,8 @@ button.viewtoggle{position:relative}
 #idrawer.stack{z-index:13;width:min(400px,100%);box-shadow:-14px 0 40px rgba(0,0,0,.18)}
 
 /* notes: one line in the table, full text on click */
-td.notecell{max-width:180px}
-.noteclip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-3);max-width:180px}
+td.notecell{max-width:150px}
+.noteclip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-3);max-width:150px}
 .noteclip.cut{cursor:zoom-in;border-radius:6px}
 .noteclip.cut:hover,.noteclip.open{color:var(--ink);text-decoration:underline dotted;text-underline-offset:3px}
 .notepop{position:fixed;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(20,20,20,.16);padding:12px 14px 12px;opacity:0;transform:translateY(-4px);transition:opacity .16s,transform .16s}
@@ -492,6 +492,57 @@ td,th{padding-left:10px;padding-right:10px}
 .tstamp>div{display:flex;flex-direction:column}
 .tsn{color:var(--ink-2);font-weight:600;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 .tsd{white-space:nowrap}
+
+/* ads + review */
+.fsect{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+.fsecth{margin:0;font:800 13px Nunito,"Open Sans",sans-serif;color:var(--ink)}
+.affix{display:flex;align-items:center;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding-left:10px}
+.affix span{color:var(--ink-3);font-weight:600}
+.affix input{border:0!important;background:none!important;padding-left:4px!important}
+.affix:focus-within{border-color:var(--action,#4F0CE8)}
+.vico{width:12px;height:12px;flex:none}
+.vpill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;font:800 11.5px/1 Nunito,"Open Sans",sans-serif;padding:5px 10px;border:1px solid transparent;cursor:pointer;white-space:nowrap;transition:filter .15s,transform .15s}
+.vpill:hover:not(:disabled){filter:brightness(.96);transform:translateY(-1px)}
+.vpill:disabled{cursor:default}
+.vpill.sm{padding:5px 10px}
+.vpill.xs{padding:3px 8px;font-size:11px}
+.vpill.xs .vico{width:10px;height:10px}
+.vpill.pause,.vopt.pause,.vpick.pause[aria-pressed="true"]{background:#FCE8EA;color:#B3263A;border-color:#F5C6CD}
+.vpill.watch,.vopt.watch,.vpick.watch[aria-pressed="true"]{background:#FFF3D6;color:#9A6400;border-color:#F4DDA2}
+.vpill.approved,.vopt.approved,.vpick.approved[aria-pressed="true"]{background:#EDF6DC;color:#217C01;border-color:#CFE6A8}
+.vpill.none{background:var(--surface);color:var(--ink-3);border:1px dashed var(--line)}
+.vplus{font-weight:800}
+.vpick{gap:6px}
+.vpick[aria-pressed="true"]{box-shadow:none}
+.cardtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.minimeta .vpill{margin-right:2px}
+.statstack{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.perf{display:grid;grid-template-columns:repeat(4,auto);justify-content:space-between;gap:6px;margin-top:10px;padding:8px 10px;background:var(--surface-2);border-radius:10px;font-size:11px;color:var(--ink-3)}
+.perf span{display:flex;flex-direction:column;line-height:1.25}
+.perf b{font:800 12.5px Nunito,"Open Sans",sans-serif;color:var(--ink)}
+.tperf{font-size:12px;color:var(--ink-2);white-space:nowrap;line-height:1.35}
+.tperf b{color:var(--ink)}
+.tperf span{display:block;color:var(--ink-3);font-size:11.5px}
+.evtv[data-verdict]{cursor:pointer}
+.evtv[data-verdict]:hover{box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+.evtv{margin-left:auto;flex:none;font-size:10px;font-weight:800;padding:2px 6px;border-radius:999px;background:#fff}
+.evtv.pause{color:#B3263A}.evtv.watch{color:#9A6400}.evtv.approved{color:#217C01}
+.vmenu{position:fixed;z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(20,20,20,.16);padding:6px;display:grid;gap:4px;min-width:170px;opacity:0;transform:translateY(-4px);transition:opacity .15s,transform .15s}
+.vmenu.in{opacity:1;transform:none}
+.vopt{display:flex;align-items:center;gap:8px;border-radius:8px;padding:8px 10px;font:800 12.5px Nunito,"Open Sans",sans-serif;text-align:left;width:100%;border:1px solid transparent}
+.vopt:not(.cur){background:none!important;border-color:transparent!important}
+.vopt:hover,.vopt:focus{outline:none;filter:brightness(.97);background:var(--surface-2)!important}
+.vopt.clear{color:var(--ink-3);font-weight:600;border-top:1px solid var(--line)!important;border-radius:0 0 8px 8px}
+.vchk{margin-left:auto}
+.archlinks{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+.dfoot{gap:8px;flex-wrap:wrap}
+.dfoot .btn{padding:8px 13px}
+.dfoot>div{gap:6px!important}
+#perfSect .row2{align-items:end}
+
+/* table links stacked (each pill stays on one line) so the table fits */
+td .links{flex-direction:column;align-items:flex-start;gap:4px;width:auto}
 </style>
 </head>
 <body>
@@ -619,6 +670,23 @@ td,th{padding-left:10px;padding-right:10px}
       <div class="urlrow"><input type="url" id="fPost" placeholder="https://www.tiktok.com/@creator/video/…" inputmode="url"><a class="btn iconbtn openlink" id="fPostOpen" target="_blank" rel="noopener noreferrer" aria-label="Open live post" hidden>↗</a></div></label>
     <label class="f"><span>Source Files <span class="hintlbl">· OneDrive folder or file</span></span>
       <div class="urlrow"><input type="url" id="fFiles" placeholder="https://…sharepoint.com/… or onedrive.live.com/…" inputmode="url"><a class="btn iconbtn openlink" id="fFilesOpen" target="_blank" rel="noopener noreferrer" aria-label="Open source files" hidden>↗</a></div></label>
+    <div class="fsect">
+      <p class="fsecth">Ads</p>
+      <div class="row2">
+        <label class="f">Monetary tag<input id="fTag" placeholder="e.g. NHV-Q4-TT-01" autocomplete="off"></label>
+        <label class="f">Ad set name<input id="fAdset" placeholder="e.g. Dog owners 25–44" autocomplete="off"></label>
+      </div>
+    </div>
+    <div class="fsect" id="perfSect">
+      <p class="fsecth">Last 30 days <span class="hintlbl" id="perfUpdated"></span></p>
+      <div class="row2">
+        <label class="f">Money spent<div class="affix"><span>$</span><input id="fSpend" inputmode="decimal" placeholder="0.00" autocomplete="off"></div></label>
+        <label class="f">Landing page views<input id="fLpv" inputmode="numeric" placeholder="0" autocomplete="off"></label>
+        <label class="f">Conversions<input id="fConv" inputmode="numeric" placeholder="0" autocomplete="off"></label>
+        <label class="f" title="Cost per landing page view">Cost per LPV<div class="affix"><span>$</span><input id="fCplpv" inputmode="decimal" placeholder="0.00" autocomplete="off"></div></label>
+      </div>
+      <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Review<div class="pickers" id="fVerdict"></div></div>
+    </div>
     <label class="f">Notes<textarea id="fNotes" placeholder="Anything the team should know"></textarea></label>
     <div class="edited" id="fEdited"></div>
     <div class="err" id="fErr"></div>
@@ -707,6 +775,23 @@ const TRASH_ICON = '<svg class="btnico" viewBox="0 0 16 16" fill="none" stroke="
 // Handle first (falls back to name when there's no handle)
 const infH = c => { const i=influencers[c.influencerId]; return i&&i.handle?infHandle(i.handle):""; };
 const infPrimary = c => infH(c) || c.influencer || "Untitled";
+// Review status: Pause / Watch / Approved
+const VERDICTS={pause:{label:"Pause",cls:"pause"},watch:{label:"Watch",cls:"watch"},approved:{label:"Approved",cls:"approved"}};
+const VDOT={pause:'<svg class="vico" viewBox="0 0 12 12" aria-hidden="true"><rect x="3" y="2.5" width="2" height="7" rx=".6" fill="currentColor"/><rect x="7" y="2.5" width="2" height="7" rx=".6" fill="currentColor"/></svg>',watch:'<svg class="vico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="1.9"/></svg>',approved:'<svg class="vico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>'};
+function verdictPill(c,size=""){
+  const v=VERDICTS[c.verdict];
+  if(!v&&!canWrite()) return "";
+  const inner=v?`${VDOT[c.verdict]}${v.label}`:`<span class="vplus">＋</span>Review`;
+  return `<button type="button" class="vpill ${v?v.cls:"none"} ${size}" data-verdict="${esc(c.id)}" ${canWrite()?"":"disabled"} aria-haspopup="menu" title="${v?"Review: "+v.label+(canWrite()?" · click to change":""):"Set review status"}">${inner}</button>`;
+}
+const money = n => (n===null||n===undefined||n==="")?"—":"$"+Number(n).toLocaleString(undefined,{minimumFractionDigits:Number(n)%1?2:0,maximumFractionDigits:2});
+const num = n => (n===null||n===undefined||n==="")?"—":Number(n).toLocaleString();
+const hasPerf = c => [c.spend,c.lpv,c.conv,c.cplpv].some(x=>x!==null&&x!==undefined&&x!=="");
+const cplpvOf = c => (c.cplpv!==null&&c.cplpv!==undefined&&c.cplpv!=="")?c.cplpv:((c.spend!=null&&c.lpv)?Math.round(c.spend/c.lpv*100)/100:null);
+function perfStrip(c){
+  if(!hasPerf(c)) return "";
+  return `<div class="perf" title="Last 30 days"><span><b>${money(c.spend)}</b>spent</span><span><b>${num(c.lpv)}</b>LPV</span><span><b>${num(c.conv)}</b>conv.</span><span><b>${money(cplpvOf(c))}</b>/LPV</span></div>`;
+}
 const fmt = s => { const d=parse(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—"; };
 const addDays = (d,n) => new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -765,7 +850,7 @@ function infMatches(i){
 function matchesQuery(c){
   if(!query) return true;
   const inf=influencers[c.influencerId]||{};
-  const hay=norm([c.influencer,inf.handle,(inf.pets||[]).join(" "),c.asset,c.notes,c.channel,c.status,nameOf(c.createdBy),nameOf(c.updatedBy)].join(" "));
+  const hay=norm([c.moneyTag,c.adset,c.verdict,c.influencer,inf.handle,(inf.pets||[]).join(" "),c.asset,c.notes,c.channel,c.status,nameOf(c.createdBy),nameOf(c.updatedBy)].join(" "));
   return norm(query).split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
 }
 const byChan = c => (!chanFilter.size || chanFilter.has(c.channel)) && matchesQuery(c);
@@ -773,8 +858,8 @@ function visible(){ return campaigns.filter(c => !c.archivedAt && byChan(c)); } 
 function archivedList(){ return campaigns.filter(c => c.archivedAt && byChan(c)).sort((a,b)=>new Date(b.archivedAt)-new Date(a.archivedAt)); }
 
 /* ---------- mapping between database rows and the page ---------- */
-const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,postUrl:r.post_url||"",filesUrl:r.files_url||"",createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at,archivedAt:r.archived_at||null,archivedBy:r.archived_by||null,influencerId:r.influencer_id||null});
-const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||"",post_url:c.postUrl||null,files_url:c.filesUrl||null,influencer_id:c.influencerId||null});
+const fromRow = r => ({id:r.id,influencer:r.influencer,asset:r.asset,channel:r.channel,status:r.status,start:r.start_date||"",end:r.end_date||"",notes:r.notes,postUrl:r.post_url||"",filesUrl:r.files_url||"",createdBy:r.created_by,createdAt:r.created_at,updatedBy:r.updated_by,updatedAt:r.updated_at,archivedAt:r.archived_at||null,archivedBy:r.archived_by||null,influencerId:r.influencer_id||null,moneyTag:r.monetary_tag||"",adset:r.adset_name||"",spend:r.spend_30d,lpv:r.lpv_30d,conv:r.conversions_30d,cplpv:r.cplpv_30d,verdict:r.verdict||null,metricsAt:r.metrics_updated_at||null});
+const toRow = c => ({influencer:c.influencer,asset:c.asset||"",channel:c.channel||"",status:c.status||"Not Started",start_date:c.start||null,end_date:c.end||null,notes:c.notes||"",post_url:c.postUrl||null,files_url:c.filesUrl||null,influencer_id:c.influencerId||null,monetary_tag:c.moneyTag||"",adset_name:c.adset||"",spend_30d:c.spend??null,lpv_30d:c.lpv??null,conversions_30d:c.conv??null,cplpv_30d:c.cplpv??null,verdict:c.verdict||null});
 
 /* ---------- filters ---------- */
 function renderFilters(){
@@ -819,7 +904,7 @@ function miniCard(c,k){
   return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(infH(c)?infH(c)+" ("+c.influencer+")":c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
     <span class="miniico">${icon(c.channel)}</span>
     <span class="minitxt"><b>${esc(infPrimary(c))}</b><span>${esc(c.asset||"")}</span></span>
-    <span class="minimeta">${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink post" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink files" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
+    <span class="minimeta">${verdictPill(c,"xs")}${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink post" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink files" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
   </div>`;
 }
 function renderBoard(){
@@ -829,10 +914,11 @@ function renderBoard(){
     return `<section class="col" data-status="${esc(s)}">
       <div class="colhead">${stat(s)}<span class="colctl"><span class="count">${col.length}</span><button type="button" class="viewtoggle" data-compact="${esc(s)}" aria-pressed="${compactCols.has(s)}" aria-label="Compact ${esc(s)} cards" title="${compactCols.has(s)?"Switch to full cards":"Switch to compact cards"}"><i class="thumb" aria-hidden="true"></i><span class="${compactCols.has(s)?"":"on"}">${ICON_EXPAND}</span><span class="${compactCols.has(s)?"on":""}">${ICON_COMPACT}</span></button></span></div>
       ${col.map(c=>{const k=ch(c.channel); if(compactCols.has(s)) return miniCard(c,k); return `<div class="card" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}">
-        ${tag(c.channel)}
+        <div class="cardtop">${tag(c.channel)}${verdictPill(c,"sm")}</div>
         <div class="who">${esc(infPrimary(c))}${infH(c)&&c.influencer?` <span class="whoh">${esc(c.influencer)}</span>`:""}</div>
         <div class="what">${esc(c.asset||"")}</div>
         <div class="when">${CAL_ICON}<span>${fmtRange(c.start,c.end)}</span></div>
+        ${perfStrip(c)}
         ${linkChips(c)}
         <div class="stamps">${stamp("Created",c.createdBy,c.createdAt)}${(c.updatedAt&&c.createdAt&&Math.abs(new Date(c.updatedAt)-new Date(c.createdAt))>60000)?stamp("Edited",c.updatedBy,c.updatedAt):""}</div>
       </div>`}).join("")}
@@ -890,7 +976,7 @@ function renderCalendar(){
       let lane=lanes.findIndex(end=>end<s);if(lane<0){lane=lanes.length;lanes.push(-1);}lanes[lane]=e;
       const k=ch(c.channel);
       const cls=[c.status==="Done"?"done":"",c.s<ws?"cont-l":"",c.e>we?"cont-r":""].join(" ");
-      cells+=`<button class="evt ${cls}" data-id="${esc(c.id)}" title="${esc(infH(c)?infH(c)+" ("+c.influencer+")":c.influencer)} · ${esc(c.asset)}" style="grid-column:${s+1} / ${e+2};grid-row:${lane+2};--c:${k.c};--cf:${k.f}"><span class="evtico">${icon(c.channel)}</span><span>${esc(infPrimary(c))} — ${esc(c.asset||"")}</span></button>`;
+      cells+=`<button class="evt ${cls}" data-id="${esc(c.id)}" title="${esc(infH(c)?infH(c)+" ("+c.influencer+")":c.influencer)} · ${esc(c.asset)}" style="grid-column:${s+1} / ${e+2};grid-row:${lane+2};--c:${k.c};--cf:${k.f}"><span class="evtico">${icon(c.channel)}</span><span>${esc(infPrimary(c))} — ${esc(c.asset||"")}</span>${c.verdict?`<span class="evtv ${c.verdict}" ${canWrite()?`data-verdict="${esc(c.id)}"`:""} title="Review: ${VERDICTS[c.verdict].label}${canWrite()?" · click to change":""}">${VERDICTS[c.verdict].label}</span>`:""}</button>`;
     }
     html+=`<div class="week">${cells}</div>`;
   }
@@ -939,8 +1025,8 @@ function wireCalendar(){
 /* ---------- table ---------- */
 function renderTable(){
   const items=visible().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
-  return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Campaign Name</th><th>Status</th><th>Start</th><th>End</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
-  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td>${(()=>{const h=influencers[c.influencerId]&&influencers[c.influencerId].handle;return h?`<div class="tdinf"><b>${esc(infHandle(h))}</b><span>${esc(c.influencer||"")}</span></div>`:`<b>${esc(c.influencer||"Untitled")}</b>`;})()}</td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td>${stat(c.status)}</td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${linkChips(c)}</td><td class="notecell">${c.notes?`<div class="noteclip" tabindex="0" data-note="${esc(c.id)}">${esc(c.notes)}</div>`:""}</td><td>${tstamp(c.createdBy,c.createdAt,"add")}</td><td>${tstamp(c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
+  return `<div class="tablewrap"><table><thead><tr><th>Influencer</th><th>Channel</th><th>Campaign Name</th><th>Status</th><th>Start</th><th>End</th><th>Last 30 days</th><th>Links</th><th>Notes</th><th>Created</th><th>Last edited</th></tr></thead><tbody>
+  ${items.map(c=>{return `<tr data-id="${esc(c.id)}"><td>${(()=>{const h=influencers[c.influencerId]&&influencers[c.influencerId].handle;return h?`<div class="tdinf"><b>${esc(infHandle(h))}</b><span>${esc(c.influencer||"")}</span></div>`:`<b>${esc(c.influencer||"Untitled")}</b>`;})()}</td><td>${tag(c.channel)}</td><td>${esc(c.asset||"")}</td><td><div class="statstack">${stat(c.status)}${verdictPill(c,"xs")}</div></td><td>${fmtYr(c.start)}</td><td>${fmtYr(c.end)}</td><td>${hasPerf(c)?`<div class="tperf"><b>${money(c.spend)}</b> · ${money(cplpvOf(c))}/LPV<span>${num(c.lpv)} LPV · ${num(c.conv)} conv.</span></div>`:'<span class="muted">—</span>'}</td><td>${linkChips(c)}</td><td class="notecell">${c.notes?`<div class="noteclip" tabindex="0" data-note="${esc(c.id)}">${esc(c.notes)}</div>`:""}</td><td>${tstamp(c.createdBy,c.createdAt,"add")}</td><td>${tstamp(c.updatedBy,c.updatedAt,"edit")}</td></tr>`}).join("")}
   </tbody></table></div>`;
 }
 function wireTable(){
@@ -1093,7 +1179,7 @@ function renderArchive(){
   return `<div class="archlist">${items.map(c=>{const k=ch(c.channel);return `<div class="archrow" data-id="${esc(c.id)}" style="--c:${k.c}">
     <div class="archmain" role="button" tabindex="0">${tag(c.channel)}<div class="archtxt"><b>${esc(c.influencer||"Untitled")}</b><span>${esc(c.asset||"")}</span></div></div>
     <div class="archdates"><span class="when">${CAL_ICON}<span>${fmtRange(c.start,c.end)}</span></span>${stat(c.status)}</div>
-    <div class="archlinks">${linkChips(c)}</div>
+    <div class="archlinks">${verdictPill(c,"xs")}${linkChips(c)}</div>
     <div class="archwho">${stamp("Archived",c.archivedBy,c.archivedAt)}</div>
     <div class="archact">${canWrite()?`<button class="btn" data-restore="${esc(c.id)}">↩ Restore</button>`:""}${canDelete()?`<button class="btn danger iconbtn" data-del="${esc(c.id)}" aria-label="Delete permanently" title="Delete permanently"><svg class="btnico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5h11M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.6a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9l.7-8.6M6.8 7v4.5M9.2 7v4.5"/></svg></button>`:""}</div>
   </div>`;}).join("")}</div>`;
@@ -1153,6 +1239,37 @@ if(window.ResizeObserver){
 window.addEventListener("resize",()=>moveTabIndicator(false));
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>moveTabIndicator(false));
 
+/* ---------- review pill menu (Pause / Watch / Approved) ---------- */
+function openVerdictMenu(btn){
+  closeVerdictMenu();
+  const c=campaigns.find(x=>x.id===btn.dataset.verdict); if(!c||!canWrite()) return;
+  const m=document.createElement("div"); m.className="vmenu"; m.id="vMenu"; m.setAttribute("role","menu");
+  m.innerHTML=Object.entries(VERDICTS).map(([k,v])=>`<button type="button" role="menuitemradio" aria-checked="${c.verdict===k}" class="vopt ${v.cls} ${c.verdict===k?"cur":""}" data-v="${k}">${VDOT[k]}${v.label}${c.verdict===k?'<span class="vchk">✓</span>':""}</button>`).join("")+(c.verdict?`<button type="button" class="vopt clear" data-v="">Clear review</button>`:"");
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(); let left=Math.min(r.left,window.innerWidth-m.offsetWidth-12), top=r.bottom+6;
+  if(top+m.offsetHeight>window.innerHeight-12) top=r.top-m.offsetHeight-6;
+  m.style.left=Math.max(12,left)+"px"; m.style.top=top+"px"; requestAnimationFrame(()=>m.classList.add("in"));
+  m.querySelectorAll(".vopt").forEach(o=>o.onclick=async e=>{ e.stopPropagation(); closeVerdictMenu(); await setVerdict(c,o.dataset.v||null); });
+  (m.querySelector(".vopt.cur")||m.querySelector(".vopt")).focus();
+  m.addEventListener("keydown",e=>{ const os=[...m.querySelectorAll(".vopt")],i=os.indexOf(document.activeElement);
+    if(e.key==="ArrowDown"){e.preventDefault();os[(i+1)%os.length].focus();} else if(e.key==="ArrowUp"){e.preventDefault();os[(i-1+os.length)%os.length].focus();} else if(e.key==="Escape"){e.stopPropagation();closeVerdictMenu();btn.focus();} });
+}
+function closeVerdictMenu(){ const m=$("#vMenu"); if(m) m.remove(); }
+async function setVerdict(c,v){
+  if(!canWrite()) return;
+  const {data,error}=await sb.from("campaigns").update({verdict:v}).eq("id",c.id).select();
+  if(error||!data||!data.length){ toast(error?"Couldn't update: "+error.message:"You don't have permission to change this."); return; }
+  const row=fromRow(data[0]); const i=campaigns.findIndex(x=>x.id===row.id); if(i>=0) campaigns[i]=row; applyInfluencerNames();
+  render(); toast(v?`Marked ${VERDICTS[v].label}`:"Review cleared");
+}
+// One listener for every review pill, in every view
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-verdict]");
+  if(b){ e.stopPropagation(); e.preventDefault(); if(!b.disabled) openVerdictMenu(b); return; }
+  if(!e.target.closest("#vMenu")) closeVerdictMenu();
+},true);
+window.addEventListener("scroll",closeVerdictMenu,true); window.addEventListener("resize",closeVerdictMenu);
+
 /* ---------- render ---------- */
 function render(){
   renderView();
@@ -1205,6 +1322,12 @@ function openDrawer(c,preset={}){
   $("#fAsset").value=draft.asset||"";
   $("#fStart").value=draft.start||"";$("#fEnd").value=draft.end||"";$("#fNotes").value=draft.notes||"";
   $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
+  $("#fTag").value=draft.moneyTag||""; $("#fAdset").value=draft.adset||"";
+  const nv=x=>(x===null||x===undefined)?"":String(x);
+  $("#fSpend").value=nv(draft.spend); $("#fLpv").value=nv(draft.lpv); $("#fConv").value=nv(draft.conv); $("#fCplpv").value=nv(draft.cplpv);
+  $("#perfSect").hidden=!c;   // performance + review only when editing an existing campaign
+  $("#perfUpdated").textContent=c&&c.metricsAt?`· updated ${shortDate(c.metricsAt)}`:"";
+  renderVerdictPickers(); syncCplpvHint();
   document.querySelectorAll("#drawer input,#drawer textarea").forEach(el=>el.disabled=ro);
   $("#dSave").hidden=ro; $("#dCancel").textContent=ro?"Close":"Cancel";
   $("#dDelete").hidden=!(c&&canDelete());
@@ -1221,6 +1344,16 @@ function syncOpenLinks(){
   [["#fPost","#fPostOpen"],["#fFiles","#fFilesOpen"]].forEach(([i,a])=>{ const u=safeUrl($(i).value); const el=$(a); el.hidden=!u; if(u) el.href=u; });
 }
 ["#fPost","#fFiles"].forEach(i=>$(i).addEventListener("input",syncOpenLinks));
+function renderVerdictPickers(){
+  const ro=!canWrite();
+  $("#fVerdict").innerHTML=Object.entries(VERDICTS).map(([k,v])=>`<button type="button" class="pick vpick ${v.cls}" data-v="${k}" aria-pressed="${draft.verdict===k}" ${ro?"disabled":""}>${VDOT[k]}${v.label}</button>`).join("");
+}
+$("#fVerdict").addEventListener("click",e=>{ const b=e.target.closest(".pick"); if(!b||!canWrite()) return; draft.verdict=draft.verdict===b.dataset.v?null:b.dataset.v; renderVerdictPickers(); });
+function syncCplpvHint(){
+  const sp=Number($("#fSpend").value.replace(/[$,\s]/g,"")), lp=Number($("#fLpv").value.replace(/[,\s]/g,""));
+  $("#fCplpv").placeholder=(sp>0&&lp>0)?(Math.round(sp/lp*100)/100).toFixed(2)+" (auto)":"0.00";
+}
+["#fSpend","#fLpv"].forEach(x=>$(x).addEventListener("input",syncCplpvHint));
 function closeDrawer(){
   ["#drawer","#idrawer"].forEach(d=>{$(d).classList.remove("open");$(d).setAttribute("aria-hidden","true");});
   $("#scrim").classList.remove("open"); closeInfPanel();
@@ -1261,7 +1394,19 @@ $("#dSave").onclick=async()=>{
   if(!canWrite())return;
   const pickedInf=influencers[draft.influencerId];
   if(!pickedInf){$("#fErr").textContent=Object.keys(influencers).length?"Choose an influencer from the list.":"Add the influencer in the Influencers tab first, then choose them here.";return;}
-  const c={...draft,influencer:pickedInf.name,influencerId:pickedInf.id,asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim()};
+  const c={...draft,influencer:pickedInf.name,influencerId:pickedInf.id,asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim(),moneyTag:$("#fTag").value.trim(),adset:$("#fAdset").value.trim()};
+  if(editing){
+    const nums={spend:["#fSpend","Money spent",true],lpv:["#fLpv","Landing page views",false],conv:["#fConv","Conversions",false],cplpv:["#fCplpv","Cost per landing page view",true]};
+    for(const [k,[sel,label,dec]] of Object.entries(nums)){
+      const raw=$(sel).value.replace(/[$,\s]/g,"");
+      if(raw===""){ c[k]=null; continue; }
+      const n=Number(raw);
+      if(!isFinite(n)||n<0||(!dec&&!Number.isInteger(n))){ $("#fErr").textContent=`${label} needs to be ${dec?"a number":"a whole number"}.`; return; }
+      c[k]=dec?Math.round(n*100)/100:n;
+    }
+    // fill in cost per LPV automatically if left blank
+    if(c.cplpv===null&&c.spend!==null&&c.lpv) c.cplpv=Math.round(c.spend/c.lpv*100)/100;
+  }
   if(c.postUrl&&!safeUrl(c.postUrl)){$("#fErr").textContent="Live Post link needs to be a full web address starting with https://";return;}
   if(c.filesUrl&&!safeUrl(c.filesUrl)){$("#fErr").textContent="Source Files link needs to be a full web address starting with https://";return;}
   if(!c.influencer){$("#fErr").textContent="Add an influencer name to save.";return;}
