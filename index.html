@@ -585,6 +585,13 @@ input.min.bad{border-color:#E8A1AC;background:#FCE8EA}
 .vpill.icon{width:24px;height:24px;padding:0;justify-content:center;border-radius:50%}
 .vpill.icon .vico{width:11px;height:11px}
 .vpill.icon .vplus{font-size:12px;line-height:1}
+
+/* ad set name: read from the campaign, edited there */
+.adsetlink{border:0;background:none;padding:6px 8px;margin-left:-8px;border-radius:7px;font:500 13px "Open Sans",system-ui,sans-serif;color:var(--ink);text-align:left;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.adsetlink:hover{background:var(--surface-2);text-decoration:underline dotted;text-underline-offset:3px}
+.adsetlink.empty{color:var(--ink-3);font-size:12.5px}
+.adsetlink.empty:hover{color:var(--action,#4F0CE8)}
+.adsettxt{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 </style>
 </head>
 <body>
@@ -1237,13 +1244,17 @@ function renderMetrics(){
   ${items.map(c=>`<tr class="mrow" data-id="${esc(c.id)}">
     <td><div class="tdinf"><b>${esc(infPrimary(c))}</b>${infH(c)&&c.influencer?`<span>${esc(c.influencer)}</span>`:""}</div></td>
     <td><div class="mcamp"><span class="mico">${icon(c.channel)}</span><span>${esc(c.asset||"Untitled")}</span></div></td>
-    <td class="madset">${cell(c,"adset","—")}</td>
+    <td class="madset">${canWrite()
+      ?`<button type="button" class="adsetlink ${c.adset?"":"empty"}" data-editadset="${esc(c.id)}" title="Edit in campaign">${c.adset?esc(c.adset):"Add ad set name"}</button>`
+      :(c.adset?`<span class="adsettxt">${esc(c.adset)}</span>`:'<span class="muted">—</span>')}</td>
     <td class="num">${cell(c,"spend","0.00")}</td><td class="num">${cell(c,"lpv","0")}</td><td class="num">${cell(c,"conv","0")}</td><td class="num mcalc">${cplpvOf(c)!=null?money(cplpvOf(c)):'<span class="muted">—</span>'}</td>
     <td class="mupd">${c.metricsAt?esc(shortDate(c.metricsAt)):'<span class="muted">—</span>'}</td>
   </tr>`).join("")}
   </tbody><tfoot><tr><td colspan="3"><b>Total</b> <span class="muted">· ${items.length} campaign${items.length===1?"":"s"}</span></td><td class="num"><b>${money(tot.spend)}</b></td><td class="num"><b>${num(tot.lpv)}</b></td><td class="num"><b>${num(tot.conv)}</b></td><td class="num"><b>${tot.lpv?money(Math.round(tot.spend/tot.lpv*100)/100):"—"}</b></td><td></td></tr></tfoot></table></div>`;
 }
 function wireMetrics(){
+  // Ad set name comes from the campaign itself; clicking it opens the campaign with that field ready
+  document.querySelectorAll("[data-editadset]").forEach(b=>b.onclick=()=>{ const c=campaigns.find(x=>x.id===b.dataset.editadset); if(!c) return; openDrawer(c); setTimeout(()=>{ const f=$("#fAdset"); if(f){ f.scrollIntoView({block:"center"}); f.focus(); } },150); });
   const tbl=document.querySelector(".metrics"); if(!tbl) return;
   tbl.querySelectorAll("input.min").forEach(inp=>{
     inp.dataset.orig=inp.value;
