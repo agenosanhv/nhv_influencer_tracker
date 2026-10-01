@@ -543,6 +543,36 @@ td,th{padding-left:10px;padding-right:10px}
 
 /* table links stacked (each pill stays on one line) so the table fits */
 td .links{flex-direction:column;align-items:flex-start;gap:4px;width:auto}
+
+/* metrics sheet */
+.mhint{margin:0 0 12px;font-size:13px;color:var(--ink-3)}
+.metrics th.num,.metrics td.num{text-align:right}
+.metrics td{padding-top:8px;padding-bottom:8px}
+.metrics tbody tr{cursor:default}
+.metrics tbody tr:hover td{background:none}
+.metrics tr.editing td{background:color-mix(in srgb,var(--action,#4F0CE8) 4%,var(--surface))!important}
+.metrics tr.flash td{animation:mflash 1.6s ease}
+@keyframes mflash{0%,40%{background:#FFF3D6}100%{background:transparent}}
+.mcamp{display:flex;align-items:center;gap:8px;min-width:0}
+.mcamp>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.mico{width:22px;height:22px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;flex:none}
+.mico .ico{width:13px;height:13px}
+input.min{width:100%;min-width:0;border:1px solid transparent;background:transparent;border-radius:7px;padding:7px 8px;font:500 13px "Open Sans",system-ui,sans-serif;color:var(--ink);transition:border-color .15s,background .15s,box-shadow .15s}
+input.min:not([readonly]):hover{border-color:var(--line);background:var(--bg)}
+input.min:focus{outline:none;border-color:var(--action,#4F0CE8);background:var(--surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--action,#4F0CE8) 14%,transparent)}
+input.min::placeholder{color:var(--ink-3);opacity:.7}
+input.min.text{min-width:120px}
+td.num input.min{text-align:right}
+input.min.int{width:78px}
+.maffix{display:flex;align-items:center;justify-content:flex-end;gap:2px}
+.maffix span{color:var(--ink-3);font-size:12px}
+.maffix input.min{width:92px}
+input.min.saving{opacity:.6}
+input.min.saved{border-color:#9FD07A;background:#F2FAEA}
+input.min.bad{border-color:#E8A1AC;background:#FCE8EA}
+.mupd{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.metrics tfoot td{border-top:2px solid var(--line);border-bottom:0;background:var(--surface-2);font-size:13px;padding-top:11px;padding-bottom:11px}
+.metrics tfoot td.num{padding-right:18px}
 </style>
 </head>
 <body>
@@ -623,6 +653,8 @@ td .links{flex-direction:column;align-items:flex-start;gap:4px;width:auto}
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="12" rx="2"/><path d="M1.5 6.5h13M5 1v3M11 1v3"/></svg>Calendar</button>
       <button class="tab" role="tab" data-view="table" aria-selected="false">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 6h13M1.5 9.75h13M6 2.5v11"/></svg>Table</button>
+      <button class="tab" role="tab" data-view="metrics" aria-selected="false">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.5h12"/><path d="M4 11V8M7.33 11V5M10.67 11V7M14 11V3.5" /></svg>Performance</button>
       <button class="tab" role="tab" data-view="influencers" aria-selected="false">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="1.75" width="10.5" height="12.5" rx="1.5"/><circle cx="8.25" cy="6.5" r="1.9"/><path d="M5.25 11.5c.5-1.5 1.6-2.3 3-2.3s2.5.8 3 2.3M1.75 4.5h2.5M1.75 8h2.5M1.75 11.5h2.5"/></svg>Influencers<span class="tabcount" id="infCount"></span></button>
       <button class="tab" role="tab" data-view="archive" aria-selected="false">
@@ -679,12 +711,7 @@ td .links{flex-direction:column;align-items:flex-start;gap:4px;width:auto}
     </div>
     <div class="fsect" id="perfSect">
       <p class="fsecth">Last 30 days <span class="hintlbl" id="perfUpdated"></span></p>
-      <div class="row2">
-        <label class="f">Money spent<div class="affix"><span>$</span><input id="fSpend" inputmode="decimal" placeholder="0.00" autocomplete="off"></div></label>
-        <label class="f">Landing page views<input id="fLpv" inputmode="numeric" placeholder="0" autocomplete="off"></label>
-        <label class="f">Conversions<input id="fConv" inputmode="numeric" placeholder="0" autocomplete="off"></label>
-        <label class="f" title="Cost per landing page view">Cost per LPV<div class="affix"><span>$</span><input id="fCplpv" inputmode="decimal" placeholder="0.00" autocomplete="off"></div></label>
-      </div>
+      <div id="perfSummary"></div>
       <div class="f" style="display:grid;gap:6px;font-size:12.5px;font-weight:700;color:var(--ink-2)">Review<div class="pickers" id="fVerdict"></div></div>
     </div>
     <label class="f">Notes<textarea id="fNotes" placeholder="Anything the team should know"></textarea></label>
@@ -737,7 +764,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let me = null;            // my profile row
 let profiles = {};        // id -> profile
 let campaigns = [];
-const VIEW_KEY="nhv-tracker-view", VIEWS=["board","calendar","table","influencers","archive","team"];
+const VIEW_KEY="nhv-tracker-view", VIEWS=["board","calendar","table","metrics","influencers","archive","team"];
 // Reopen the tab you were last on (remembered per browser)
 let view = (()=>{ try{ const v=localStorage.getItem(VIEW_KEY); return VIEWS.includes(v)?v:"board"; }catch(e){ return "board"; } })(), chanFilter = new Set();
 let calMonth = (()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1)})();
@@ -1172,6 +1199,75 @@ $("#infList").addEventListener("keydown",e=>{
 $("#infList").addEventListener("click",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return; setInfPick(b.dataset.pick); $("#fErr").textContent=""; closeInfPanel(); $("#infBtn").focus(); });
 document.addEventListener("click",e=>{ if(!e.target.closest("#infCombo")) closeInfPanel(); });
 
+/* ---------- metrics (spreadsheet-style entry) ---------- */
+const MFIELDS={
+  moneyTag:{col:"monetary_tag",type:"text"},
+  adset:{col:"adset_name",type:"text"},
+  spend:{col:"spend_30d",type:"money",label:"Money spent"},
+  lpv:{col:"lpv_30d",type:"int",label:"Landing page views"},
+  conv:{col:"conversions_30d",type:"int",label:"Conversions"},
+  cplpv:{col:"cplpv_30d",type:"money",label:"Cost per LPV"}
+};
+const fmtIn=(v,type)=>(v===null||v===undefined||v==="")?"":(type==="money"?Number(v).toFixed(2):String(v));
+function metricsItems(){ return visible().sort((a,b)=>(b.start||"").localeCompare(a.start||"")); }
+function renderMetrics(){
+  const items=metricsItems(), ro=!canWrite();
+  if(!items.length) return `<div class="empty">${query||chanFilter.size?"No campaigns match.":"No campaigns yet."}</div>`;
+  const cell=(c,f,ph="")=>{ const d=MFIELDS[f]; const v=fmtIn(c[f],d.type);
+    const auto=f==="cplpv"&&(c.cplpv===null||c.cplpv===undefined)&&c.spend!=null&&c.lpv?(c.spend/c.lpv).toFixed(2):"";
+    const inp=`<input class="min ${d.type}" data-f="${f}" value="${esc(v)}" placeholder="${esc(auto?auto+" auto":ph)}" ${ro?"readonly":""} inputmode="${d.type==="int"?"numeric":d.type==="money"?"decimal":"text"}" autocomplete="off" aria-label="${esc(d.label||f)}">`;
+    return d.type==="money"?`<div class="maffix"><span>$</span>${inp}</div>`:inp; };
+  const tot=items.reduce((t,c)=>{ if(c.spend!=null) t.spend+=Number(c.spend); if(c.lpv!=null) t.lpv+=Number(c.lpv); if(c.conv!=null) t.conv+=Number(c.conv); return t; },{spend:0,lpv:0,conv:0});
+  return `<p class="mhint">${ro?"Results for the last 30 days.":"Click any cell to type. Changes save automatically when you press Enter or click away. Leave <b>Cost per LPV</b> blank to have it worked out for you."}</p>
+  <div class="tablewrap"><table class="metrics"><thead><tr><th>Influencer</th><th>Campaign</th><th>Monetary tag</th><th>Ad set name</th><th class="num">Money spent</th><th class="num">LPV</th><th class="num">Conv.</th><th class="num">Cost / LPV</th><th>Review</th><th>Updated</th></tr></thead><tbody>
+  ${items.map(c=>`<tr class="mrow" data-id="${esc(c.id)}">
+    <td><div class="tdinf"><b>${esc(infPrimary(c))}</b>${infH(c)&&c.influencer?`<span>${esc(c.influencer)}</span>`:""}</div></td>
+    <td><div class="mcamp"><span class="mico">${icon(c.channel)}</span><span>${esc(c.asset||"Untitled")}</span></div></td>
+    <td>${cell(c,"moneyTag","—")}</td><td>${cell(c,"adset","—")}</td>
+    <td class="num">${cell(c,"spend","0.00")}</td><td class="num">${cell(c,"lpv","0")}</td><td class="num">${cell(c,"conv","0")}</td><td class="num">${cell(c,"cplpv","0.00")}</td>
+    <td>${verdictPill(c,"xs")}</td>
+    <td class="mupd">${c.metricsAt?esc(shortDate(c.metricsAt)):'<span class="muted">—</span>'}</td>
+  </tr>`).join("")}
+  </tbody><tfoot><tr><td colspan="4"><b>Total</b> <span class="muted">· ${items.length} campaign${items.length===1?"":"s"}</span></td><td class="num"><b>${money(tot.spend)}</b></td><td class="num"><b>${num(tot.lpv)}</b></td><td class="num"><b>${num(tot.conv)}</b></td><td class="num"><b>${tot.lpv?money(Math.round(tot.spend/tot.lpv*100)/100):"—"}</b></td><td colspan="2"></td></tr></tfoot></table></div>`;
+}
+function wireMetrics(){
+  const tbl=document.querySelector(".metrics"); if(!tbl) return;
+  tbl.querySelectorAll("input.min").forEach(inp=>{
+    inp.dataset.orig=inp.value;
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){ e.preventDefault(); const rows=[...tbl.querySelectorAll("tbody .mrow")], r=inp.closest(".mrow"), i=rows.indexOf(r), f=inp.dataset.f;
+        const next=rows[i+(e.shiftKey?-1:1)]; const ni=next&&next.querySelector(`input[data-f="${f}"]`); if(ni){ ni.focus(); ni.select(); } else inp.blur(); }
+      else if(e.key==="Escape"){ e.stopPropagation(); inp.value=inp.dataset.orig; inp.blur(); }
+    });
+    inp.addEventListener("focus",()=>{ inp.closest("tr").classList.add("editing"); });
+    inp.addEventListener("blur",async()=>{
+      inp.closest("tr").classList.remove("editing");
+      if(inp.value.trim()!==inp.dataset.orig.trim()) await saveMetricCell(inp);
+      setTimeout(()=>{ if(metricsDirty&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".metrics"))){ metricsDirty=false; render(); } },0);
+    });
+  });
+}
+async function saveMetricCell(inp){
+  if(!canWrite()) return;
+  const id=inp.closest(".mrow").dataset.id, f=inp.dataset.f, d=MFIELDS[f], c=campaigns.find(x=>x.id===id); if(!c) return;
+  let val=inp.value.trim();
+  if(d.type!=="text"){
+    const raw=val.replace(/[$,\s]/g,"");
+    if(raw===""){ val=null; }
+    else { const n=Number(raw);
+      if(!isFinite(n)||n<0||(d.type==="int"&&!Number.isInteger(n))){ inp.classList.add("bad"); toast(`${d.label} needs to be ${d.type==="int"?"a whole number":"a number"}.`); inp.value=inp.dataset.orig; setTimeout(()=>inp.classList.remove("bad"),1600); return; }
+      val=d.type==="money"?Math.round(n*100)/100:n; }
+  }
+  inp.classList.add("saving");
+  const {data,error}=await sb.from("campaigns").update({[d.col]:val}).eq("id",id).select();
+  inp.classList.remove("saving");
+  if(error||!data||!data.length){ inp.classList.add("bad"); inp.value=inp.dataset.orig; toast(error?"Couldn't save: "+error.message:"You don't have permission to change this."); setTimeout(()=>inp.classList.remove("bad"),1600); return; }
+  const row=fromRow(data[0]); const i=campaigns.findIndex(x=>x.id===id); if(i>=0) campaigns[i]=row; applyInfluencerNames();
+  inp.value=fmtIn(row[f],d.type); inp.dataset.orig=inp.value;
+  inp.classList.add("saved"); setTimeout(()=>inp.classList.remove("saved"),1200);
+  metricsDirty=true;   // refresh totals / auto cost-per-LPV once focus leaves the sheet
+}
+
 /* ---------- archive ---------- */
 function renderArchive(){
   const items=archivedList();
@@ -1270,7 +1366,10 @@ document.addEventListener("click",e=>{
 window.addEventListener("scroll",closeVerdictMenu,true); window.addEventListener("resize",closeVerdictMenu);
 
 /* ---------- render ---------- */
+let metricsDirty=false;
 function render(){
+  // don't redraw the Metrics sheet while someone is typing in it; catch up when they leave the cell
+  if(view==="metrics"&&document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".metrics")){ metricsDirty=true; return; }
   renderView();
   // position the underline after tab counts etc. are filled in
   const anim=slideTab; slideTab=false; moveTabIndicator(anim);
@@ -1288,6 +1387,7 @@ function renderView(){
   if(view==="team"){v.innerHTML=renderTeam();wireTeam();return;}
   if(view==="archive"){v.innerHTML=renderArchive();wireArchive();return;}
   if(view==="influencers"){v.innerHTML=renderInfluencers();wireInfluencers();return;}
+  if(view==="metrics"){v.innerHTML=renderMetrics();wireMetrics();return;}
   if(!campaigns.some(c=>!c.archivedAt)&&view!=="calendar"){v.innerHTML=`<div class="empty">${canWrite()?`No campaigns yet. Add your first one to see it on the board and calendar.<br><br><button class="btn primary" id="emptyNew">＋ New campaign</button>`:"No campaigns yet."}</div>`;const b=$("#emptyNew");if(b)b.onclick=()=>openDrawer(null);return;}
   if(view==="board"){v.innerHTML=renderBoard();wireBoard();}
   else if(view==="calendar"){v.innerHTML=renderCalendar();wireCalendar();}
@@ -1323,9 +1423,11 @@ function openDrawer(c,preset={}){
   $("#fPost").value=draft.postUrl||""; $("#fFiles").value=draft.filesUrl||""; syncOpenLinks();
   $("#fTag").value=draft.moneyTag||""; $("#fAdset").value=draft.adset||"";
   const nv=x=>(x===null||x===undefined)?"":String(x);
-  $("#fSpend").value=nv(draft.spend); $("#fLpv").value=nv(draft.lpv); $("#fConv").value=nv(draft.conv); $("#fCplpv").value=nv(draft.cplpv);
+
   $("#perfSect").hidden=!c;   // performance + review only when editing an existing campaign
   $("#perfUpdated").textContent=c&&c.metricsAt?`· updated ${shortDate(c.metricsAt)}`:"";
+  $("#perfSummary").innerHTML=c?`${perfStrip(c)||'<p class="muted" style="margin:0;font-size:13px">No results entered yet.</p>'}<button type="button" class="linkbtn" id="goMetrics" style="margin-top:8px">${canWrite()?"Enter results in the Performance tab →":"See the Performance tab →"}</button>`:"";
+  const gm=$("#goMetrics"); if(gm) gm.onclick=()=>{ const id=c.id; closeDrawer(); view="metrics"; try{localStorage.setItem(VIEW_KEY,view);}catch(e){} slideTab=true; render(); setTimeout(()=>{ const r=document.querySelector(`.mrow[data-id="${CSS.escape(id)}"]`); if(r){ r.scrollIntoView({block:"center",behavior:"smooth"}); r.classList.add("flash"); const i=r.querySelector("input[data-f='spend']"); if(i&&canWrite()) i.focus(); } },150); };
   renderVerdictPickers(); syncCplpvHint();
   document.querySelectorAll("#drawer input,#drawer textarea").forEach(el=>el.disabled=ro);
   $("#dSave").hidden=ro; $("#dCancel").textContent=ro?"Close":"Cancel";
@@ -1348,11 +1450,11 @@ function renderVerdictPickers(){
   $("#fVerdict").innerHTML=Object.entries(VERDICTS).map(([k,v])=>`<button type="button" class="pick vpick ${v.cls}" data-v="${k}" aria-pressed="${draft.verdict===k}" ${ro?"disabled":""}>${VDOT[k]}${v.label}</button>`).join("");
 }
 $("#fVerdict").addEventListener("click",e=>{ const b=e.target.closest(".pick"); if(!b||!canWrite()) return; draft.verdict=draft.verdict===b.dataset.v?null:b.dataset.v; renderVerdictPickers(); });
-function syncCplpvHint(){
+function syncCplpvHint(){ return;
   const sp=Number($("#fSpend").value.replace(/[$,\s]/g,"")), lp=Number($("#fLpv").value.replace(/[,\s]/g,""));
   $("#fCplpv").placeholder=(sp>0&&lp>0)?(Math.round(sp/lp*100)/100).toFixed(2)+" (auto)":"0.00";
 }
-["#fSpend","#fLpv"].forEach(x=>$(x).addEventListener("input",syncCplpvHint));
+
 function closeDrawer(){
   ["#drawer","#idrawer"].forEach(d=>{$(d).classList.remove("open");$(d).setAttribute("aria-hidden","true");});
   $("#scrim").classList.remove("open"); closeInfPanel();
@@ -1394,7 +1496,7 @@ $("#dSave").onclick=async()=>{
   const pickedInf=influencers[draft.influencerId];
   if(!pickedInf){$("#fErr").textContent=Object.keys(influencers).length?"Choose an influencer from the list.":"Add the influencer in the Influencers tab first, then choose them here.";return;}
   const c={...draft,influencer:pickedInf.name,influencerId:pickedInf.id,asset:$("#fAsset").value.trim(),start:$("#fStart").value,end:$("#fEnd").value,notes:$("#fNotes").value.trim(),postUrl:$("#fPost").value.trim(),filesUrl:$("#fFiles").value.trim(),moneyTag:$("#fTag").value.trim(),adset:$("#fAdset").value.trim()};
-  if(editing){
+  if(false){
     const nums={spend:["#fSpend","Money spent",true],lpv:["#fLpv","Landing page views",false],conv:["#fConv","Conversions",false],cplpv:["#fCplpv","Cost per landing page view",true]};
     for(const [k,[sel,label,dec]] of Object.entries(nums)){
       const raw=$(sel).value.replace(/[$,\s]/g,"");
