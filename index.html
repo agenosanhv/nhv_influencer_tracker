@@ -580,6 +580,11 @@ input.min.bad{border-color:#E8A1AC;background:#FCE8EA}
 .metrics td.madset input.min{min-width:140px;width:100%}
 
 .metrics td.mcalc{color:var(--ink-2);font-size:13.5px;padding-right:18px;white-space:nowrap}
+
+/* icon-only review pill (compact cards) */
+.vpill.icon{width:24px;height:24px;padding:0;justify-content:center;border-radius:50%}
+.vpill.icon .vico{width:11px;height:11px}
+.vpill.icon .vplus{font-size:12px;line-height:1}
 </style>
 </head>
 <body>
@@ -815,8 +820,9 @@ const VDOT={pause:'<svg class="vico" viewBox="0 0 12 12" aria-hidden="true"><rec
 function verdictPill(c,size=""){
   const v=VERDICTS[c.verdict];
   if(!v&&!canWrite()) return "";
-  const inner=v?`${VDOT[c.verdict]}${v.label}`:`<span class="vplus">＋</span>Review`;
-  return `<button type="button" class="vpill ${v?v.cls:"none"} ${size}" data-verdict="${esc(c.id)}" ${canWrite()?"":"disabled"} aria-haspopup="menu" title="${v?"Review: "+v.label+(canWrite()?" · click to change":""):"Set review status"}">${inner}</button>`;
+  const iconOnly=size.includes("icon");
+  const inner=v?`${VDOT[c.verdict]}${iconOnly?"":v.label}`:`<span class="vplus">＋</span>${iconOnly?"":"Review"}`;
+  return `<button type="button" class="vpill ${v?v.cls:"none"} ${size}" data-verdict="${esc(c.id)}" ${canWrite()?"":"disabled"} aria-haspopup="menu" aria-label="${v?"Review: "+v.label:"Set review status"}" title="${v?"Review: "+v.label+(canWrite()?" · click to change":""):"Set review status"}">${inner}</button>`;
 }
 const money = n => (n===null||n===undefined||n==="")?"—":"$"+Number(n).toLocaleString(undefined,{minimumFractionDigits:Number(n)%1?2:0,maximumFractionDigits:2});
 const num = n => (n===null||n===undefined||n==="")?"—":Number(n).toLocaleString();
@@ -939,7 +945,7 @@ function miniCard(c,k){
   return `<div class="card mini" role="button" tabindex="0" draggable="${canWrite()}" data-id="${esc(c.id)}" style="--c:${k.c}" title="${esc(infH(c)?infH(c)+" ("+c.influencer+")":c.influencer)} · ${esc(c.asset)} · ${esc(fmt(c.start))} → ${esc(fmt(c.end))}">
     <span class="miniico">${icon(c.channel)}</span>
     <span class="minitxt"><b>${esc(infPrimary(c))}</b><span>${esc(c.asset||"")}</span></span>
-    <span class="minimeta">${verdictPill(c,"xs")}${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink post" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink files" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
+    <span class="minimeta">${verdictPill(c,"xs icon")}${post?`<a href="${esc(post)}" target="_blank" rel="noopener noreferrer" class="minilink post" title="Live Post" aria-label="Open live post">${PLAY_ICON}</a>`:""}${files?`<a href="${esc(files)}" target="_blank" rel="noopener noreferrer" class="minilink files" title="Source Files" aria-label="Open source files">${FOLDER_ICON}</a>`:""}<span class="minidate">${fmtSide(c.end)}</span></span>
   </div>`;
 }
 function renderBoard(){
