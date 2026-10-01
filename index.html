@@ -573,6 +573,11 @@ input.min.bad{border-color:#E8A1AC;background:#FCE8EA}
 .mupd{font-size:12px;color:var(--ink-3);white-space:nowrap}
 .metrics tfoot td{border-top:2px solid var(--line);border-bottom:0;background:var(--surface-2);font-size:13px;padding-top:11px;padding-bottom:11px}
 .metrics tfoot td.num{padding-right:18px}
+
+/* ad set name column stretches to fill the space left over */
+.metrics{table-layout:auto;width:100%}
+.metrics th.madset,.metrics td.madset{width:100%}
+.metrics td.madset input.min{min-width:140px;width:100%}
 </style>
 </head>
 <body>
@@ -1219,16 +1224,15 @@ function renderMetrics(){
     return d.type==="money"?`<div class="maffix"><span>$</span>${inp}</div>`:inp; };
   const tot=items.reduce((t,c)=>{ if(c.spend!=null) t.spend+=Number(c.spend); if(c.lpv!=null) t.lpv+=Number(c.lpv); if(c.conv!=null) t.conv+=Number(c.conv); return t; },{spend:0,lpv:0,conv:0});
   return `<p class="mhint">${ro?"Results for the last 30 days.":"Click any cell to type. Changes save automatically when you press Enter or click away. Leave <b>Cost per LPV</b> blank to have it worked out for you."}</p>
-  <div class="tablewrap"><table class="metrics"><thead><tr><th>Influencer</th><th>Campaign</th><th>Monetary tag</th><th>Ad set name</th><th class="num">Money spent</th><th class="num">LPV</th><th class="num">Conv.</th><th class="num">Cost / LPV</th><th>Review</th><th>Updated</th></tr></thead><tbody>
+  <div class="tablewrap"><table class="metrics"><thead><tr><th>Influencer</th><th>Campaign</th><th class="madset">Ad set name</th><th class="num">Money spent</th><th class="num">LPV</th><th class="num">Conv.</th><th class="num">Cost / LPV</th><th>Updated</th></tr></thead><tbody>
   ${items.map(c=>`<tr class="mrow" data-id="${esc(c.id)}">
     <td><div class="tdinf"><b>${esc(infPrimary(c))}</b>${infH(c)&&c.influencer?`<span>${esc(c.influencer)}</span>`:""}</div></td>
     <td><div class="mcamp"><span class="mico">${icon(c.channel)}</span><span>${esc(c.asset||"Untitled")}</span></div></td>
-    <td>${cell(c,"moneyTag","—")}</td><td>${cell(c,"adset","—")}</td>
+    <td class="madset">${cell(c,"adset","—")}</td>
     <td class="num">${cell(c,"spend","0.00")}</td><td class="num">${cell(c,"lpv","0")}</td><td class="num">${cell(c,"conv","0")}</td><td class="num">${cell(c,"cplpv","0.00")}</td>
-    <td>${verdictPill(c,"xs")}</td>
     <td class="mupd">${c.metricsAt?esc(shortDate(c.metricsAt)):'<span class="muted">—</span>'}</td>
   </tr>`).join("")}
-  </tbody><tfoot><tr><td colspan="4"><b>Total</b> <span class="muted">· ${items.length} campaign${items.length===1?"":"s"}</span></td><td class="num"><b>${money(tot.spend)}</b></td><td class="num"><b>${num(tot.lpv)}</b></td><td class="num"><b>${num(tot.conv)}</b></td><td class="num"><b>${tot.lpv?money(Math.round(tot.spend/tot.lpv*100)/100):"—"}</b></td><td colspan="2"></td></tr></tfoot></table></div>`;
+  </tbody><tfoot><tr><td colspan="3"><b>Total</b> <span class="muted">· ${items.length} campaign${items.length===1?"":"s"}</span></td><td class="num"><b>${money(tot.spend)}</b></td><td class="num"><b>${num(tot.lpv)}</b></td><td class="num"><b>${num(tot.conv)}</b></td><td class="num"><b>${tot.lpv?money(Math.round(tot.spend/tot.lpv*100)/100):"—"}</b></td><td></td></tr></tfoot></table></div>`;
 }
 function wireMetrics(){
   const tbl=document.querySelector(".metrics"); if(!tbl) return;
